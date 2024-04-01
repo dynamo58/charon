@@ -1,7 +1,14 @@
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+#tabs {
+  height: 5vh;
 }
 
-.logo.solid:hover {
-  filter: drop-shadow(0 0 2em #2f5d90);
+#messages {
+  height: 90vh;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
+  background-color: var(--bg-secondary);
+}
+
+#send-msg-field {
+  height: 5vh;
 }

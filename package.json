@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "tauri": "tauri"
+    "tauri": "WEBKIT_DISABLE_COMPOSITING_MODE=1 tauri"
   },
   "license": "MIT",
   "dependencies": {

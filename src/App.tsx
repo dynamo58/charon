@@ -1,53 +1,32 @@
-import { createSignal } from "solid-js";
-import logo from "./assets/logo.svg";
+import { onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
+import { listen } from "@tauri-apps/api/event";
+
+interface IRecievedMessage {
+  message: string,
+}
 
 function App() {
-  const [greetMsg, setGreetMsg] = createSignal("");
-  const [name, setName] = createSignal("");
+  let messagesRef: HTMLDivElement;
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name: name() }));
-  }
+  onMount(async () => {
+    await listen('chat-msg', (event: any) => {
+      let pl = event.payload as IRecievedMessage;
 
-  return (
-    <div class="container">
-      <h1>Welcome to Tauri!</h1>
+      messagesRef.innerHTML += `<span>${pl.message}</span><br>`;
+      messagesRef.scrollTop = messagesRef.scrollHeight;
+      console.log(event);
+    })
 
-      <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={logo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
+    // await invoke("send_message", { message: "xd", channelName: "pepega00000" })
+  });
 
-      <p>Click on the Tauri, Vite, and Solid logos to learn more.</p>
-
-      <form
-        class="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg()}</p>
-    </div>
-  );
+  return (<>
+    <div id="tabs">tabs here</div>
+    <div id="messages" ref={messagesRef!}></div>
+    <div id="send-msg-field">send msg here</div>
+  </>);
 }
 
 export default App;
