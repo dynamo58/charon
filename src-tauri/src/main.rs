@@ -16,6 +16,11 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 
+#[derive(Clone, Default)]
+struct Config {
+    channels: Vec<String>,
+}
+
 #[tauri::command]
 async fn send_message(
     channel_name: String,
@@ -30,8 +35,15 @@ async fn send_message(
     }
 }
 
+#[tauri::command]
+fn fetch_config(config: State<'_, Config>) -> Config {
+    config.inner().clone()
+}
+
 #[derive(Clone, serde::Serialize)]
 struct MessagePayload {
+    sender_nick: String,
+    color: String,
     message: String,
 }
 
@@ -47,7 +59,14 @@ async fn main() {
         Some(std::env::var("TWITCH.OAUTH").unwrap()),
     )));
 
-    anon_client.join("pepega00000".to_owned()).unwrap();
+    let config = Config {
+        channels: vec!["pepega00000".into(), "gkey".into()],
+    };
+
+    for c in config.channels {
+        client.join(c.clone()).unwrap();
+        anon_client.join(c.clone()).unwrap();
+    }
 
     tauri::Builder::default()
         .setup(|app| {
@@ -60,11 +79,21 @@ async fn main() {
                     println!("Received message: {:?}", message);
                     match message {
                         ServerMessage::Privmsg(privmsg) => {
+                            let color = if let Some(c) = privmsg.name_color {
+                                dbg!(c);
+                                dbg!(c.to_string());
+                                c.to_string()
+                            } else {
+                                "#575757".into()
+                            };
+
                             app_handle
                                 .emit_all(
                                     "chat-msg",
                                     MessagePayload {
+                                        sender_nick: privmsg.sender.name,
                                         message: privmsg.message_text,
+                                        color: color,
                                     },
                                 )
                                 .unwrap();
