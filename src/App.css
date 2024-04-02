@@ -1,13 +1,34 @@
-#tabs {
+/* #tabs {
   height: 5vh;
-}
+} */
 
 #messages {
   height: 90vh;
-  overflow-y: scroll;
+  overflow: hidden;
+  /* overflow-y: scroll; */
   overflow-wrap: break-word;
   background-color: var(--bg-secondary);
 }
+
+#messages:hover {
+  overflow-y: scroll;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  transition: all 0.5 ease
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(90, 90, 90, 50);
+}
+
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0);
+}
+
 
 #send-msg-field {
   height: 5vh;

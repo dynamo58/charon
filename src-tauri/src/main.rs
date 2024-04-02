@@ -80,8 +80,6 @@ async fn main() {
                     match message {
                         ServerMessage::Privmsg(privmsg) => {
                             let color = if let Some(c) = privmsg.name_color {
-                                dbg!(c);
-                                dbg!(c.to_string());
                                 c.to_string()
                             } else {
                                 "#575757".into()
