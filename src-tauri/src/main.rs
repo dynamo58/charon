@@ -15,6 +15,7 @@ use tauri::{Manager, State};
 extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
+use std::sync::Mutex;
 
 #[derive(Clone, Default)]
 struct Config {
@@ -33,6 +34,22 @@ async fn send_message(
         Ok(_) => Ok(true),
         Err(_) => Err(()),
     }
+}
+
+#[tauri::command]
+fn join_channel(channel_name: String, anon_client: State<'_, Mutex<Client>>) -> Result<bool, ()> {
+    let res = anon_client.inner().lock().unwrap().join(channel_name);
+
+    match res {
+        Ok(_) => Ok(true),
+        Err(_) => Err(()),
+    }
+}
+
+#[tauri::command]
+fn part_channel(channel_name: String, anon_client: State<'_, Mutex<Client>>) -> Result<bool, ()> {
+    anon_client.inner().lock().unwrap().part(channel_name);
+    Ok(true)
 }
 
 #[tauri::command]
@@ -60,7 +77,7 @@ async fn main() {
     )));
 
     let config = Config {
-        channels: vec!["pepega00000".into(), "gkey".into()],
+        channels: vec!["pepega00000".into(), "gkey".to_string()],
     };
 
     for c in config.channels {
@@ -73,12 +90,14 @@ async fn main() {
             let app_handle = app.handle();
 
             app_handle.manage(client);
+            app_handle.manage(Mutex::new(anon_client));
 
             tokio::spawn(async move {
                 while let Some(message) = incoming_messages.recv().await {
                     println!("Received message: {:?}", message);
                     match message {
                         ServerMessage::Privmsg(privmsg) => {
+                            let event_name = format!("chat-msg__{}", privmsg.channel_login);
                             let color = if let Some(c) = privmsg.name_color {
                                 c.to_string()
                             } else {
@@ -87,7 +106,7 @@ async fn main() {
 
                             app_handle
                                 .emit_all(
-                                    "chat-msg",
+                                    &event_name,
                                     MessagePayload {
                                         sender_nick: privmsg.sender.name,
                                         message: privmsg.message_text,
@@ -103,7 +122,11 @@ async fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![send_message])
+        .invoke_handler(tauri::generate_handler![
+            send_message,
+            join_channel,
+            part_channel
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

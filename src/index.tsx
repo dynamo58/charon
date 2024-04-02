@@ -1,7 +1,7 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
-import { styled, ThemeProvider, DefaultTheme } from "solid-styled-components";
+import { ThemeProvider, DefaultTheme } from "solid-styled-components";
 import App from "./App";
 import { GlobalContextProvider } from "./store";
 
@@ -40,48 +40,51 @@ const GlobalStyles = () => {
   return <Styles />;
 };
 
-import 'solid-styled-components';
-declare module 'solid-styled-components' {
+import "solid-styled-components";
+declare module "solid-styled-components" {
   export interface DefaultTheme {
     colors: {
       fgMain: string;
 
       bgMain: string;
-      bgSec:  string,
-      bgTern: string,
+      bgSec: string;
+      bgTern: string;
 
-      accent1: string,
-      accent2: string,
+      accent1: string;
+      accent2: string;
 
-      border: string,
+      border: string;
     };
   }
 }
 
-
 const theme: DefaultTheme = {
   colors: {
-    fgMain:  "#fff8e0",
+    fgMain: "#fff8e0",
 
-    bgMain:  "#121212",
-    bgSec:   "#202020",
-    bgTern:  "#303030",
+    bgMain: "#121212",
+    bgSec: "#202020",
+    bgTern: "#303030",
 
     accent1: "#ffee00",
     accent2: "#00f2ff",
 
-    border:  "#505050",
-  }
+    border: "#505050",
+  },
 };
 
-render(() => (
-  <>
-    <GlobalContextProvider>
-      <GlobalStyles />
-      <ThemeProvider theme={theme}>
-        <App />
-      </ThemeProvider>
-    </GlobalContextProvider>
-  </>)
-  , document.getElementById("root") as HTMLElement
+import KeyboardManager from "./keyboard-manager";
+render(
+  () => (
+    <>
+      <GlobalContextProvider>
+        <GlobalStyles />
+        <KeyboardManager />
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
+      </GlobalContextProvider>
+    </>
+  ),
+  document.getElementById("root") as HTMLElement
 );

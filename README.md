@@ -14,7 +14,7 @@ The program is named after Greek mythology whereby Charon is the name of a ferry
 
 # Roadmap
 
-- [ ] Sending & recieving messages, channel tabs
+- [x] Sending & recieving messages, channel tabs
 - [ ] Config framework & message highlighting
 - [ ] Authentification
 - [ ] Native badges & emotes
