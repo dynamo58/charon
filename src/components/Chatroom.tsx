@@ -12,10 +12,17 @@ import ChatMessage from "./ChatMessage";
 // }
 
 const ChatroomDiv = styled.span<{ isActive: boolean }>`
-  width: 97%;
-  margin-left: auto;
-  margin-right: auto;
-  display: ${(props) => (props.isActive ? "unset" : "none")};
+  width: 100%;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  display: ${(props) => (props.isActive ? "block" : "none")};
+  height: 90vh;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  background-color: ${(props) => props.theme?.colors.bgSec};
+  &:hover {
+    overflow-y: scroll;
+  }
 `;
 
 interface IChatroomProps {

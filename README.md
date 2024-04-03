@@ -1,3 +1,11 @@
+<div align="center">
+
+**⚠️ UNDER CONSTRUCTION ⚠️**
+
+**I hereby declare that I am not responsible for any consequences that arise if you choose download this software (or its source), refer to the LICENSE file for details.**
+
+</div>
+
 # About
 
 Charon (/ˈkɛərɒn/) is an Twitch chat client. Alternative to Chatterino of sorts. It aims to claim that position by (eventually) implementing all the features of native, like:
@@ -21,4 +29,4 @@ The program is named after Greek mythology whereby Charon is the name of a ferry
 - [ ] FFZ, BTTV, 7tv emotes & badges
 - [ ] Voting
 - [ ] Predictions
-- [ ] ???
+- [ ] Channel points

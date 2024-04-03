@@ -3,3 +3,7 @@ export interface IRecievedMessage {
   color: string,
   message: string,
 }
+
+export interface Config {
+  channels: string[],
+}

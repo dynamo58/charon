@@ -7,11 +7,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-
-const DEFAULT_SETTINGS = {
-  tabs: ["pepega00000", "gkey"],
-  currTabIdx: 0,
-};
+import { Config } from "./types";
 
 interface ContextProps {
   tabs: Accessor<string[]>;
@@ -24,23 +20,53 @@ interface ContextProps {
 const GlobalContext = createContext<ContextProps>();
 
 export function GlobalContextProvider(props: any) {
-  const [tabs, setTabs] = createSignal<string[]>(DEFAULT_SETTINGS.tabs);
-  const [currTabIdx, setCurrTabIdx] = createSignal<number>(
-    DEFAULT_SETTINGS.currTabIdx
-  );
+  // ==========================================================================
+  // LOCALS
+  // ==========================================================================
+
+  // ==========================================================================
+  // REACTIVITY
+  // ==========================================================================
+
+  const [tabs, setTabs] = createSignal<string[]>([]);
+  const [currTabIdx, setCurrTabIdx] = createSignal<number>(0);
+
+  // ==========================================================================
+  // WRAPPERS
+  // ==========================================================================
 
   const openTab = async (label: string) => {
+    console.log(
+      await invoke("join_channel", { channelName: label.toLowerCase() })
+    );
     setTabs((t) => [...t, label]);
-    await invoke("join_channel", { channelName: label.toLowerCase() });
+    setCurrTabIdx((_) => tabs().length - 1);
+
+    saveConfig();
   };
 
   const closeTab = async (label: string) => {
     setTabs((t) => t.filter((a) => a !== label));
-    await invoke("part_channel", { channelName: label });
+    console.log(await invoke("part_channel", { channelName: label }));
+
+    saveConfig();
+  };
+
+  const saveConfig = async () => {
+    const gathered_config: Config = {
+      channels: tabs(),
+    };
+
+    console.log(
+      await invoke("save_config", {
+        jsonStr: JSON.stringify(gathered_config),
+      })
+    );
   };
 
   onMount(async () => {
-    // TODO: fetch config
+    let res = JSON.parse(await invoke("fetch_config")) as Config;
+    setTabs(res.channels);
   });
 
   return (

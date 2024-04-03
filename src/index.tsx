@@ -4,7 +4,6 @@ import { render } from "solid-js/web";
 import { ThemeProvider, DefaultTheme } from "solid-styled-components";
 import App from "./App";
 import { GlobalContextProvider } from "./store";
-
 import { createGlobalStyles } from "solid-styled-components";
 
 const GlobalStyles = () => {
@@ -36,6 +35,38 @@ const GlobalStyles = () => {
       background-color: var(--bg-main);
       overflow: hidden;
     }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+      transition: all 0.5 ease
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(90, 90, 90, 50);
+    }
+
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0);
+    }
+
+    #send-msg-field {
+      height: 5vh;
+    }
+
+    input {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      color: var(--fg-main);
+      border: none;
+    }
+
+    input:focus {
+      outline: none;
+    }
+
   `;
   return <Styles />;
 };

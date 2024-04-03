@@ -1,7 +1,5 @@
 import { createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
-
 import { For } from "solid-js";
 import Chatroom from "./components/Chatroom";
 
@@ -40,16 +38,14 @@ function App() {
           )}
         </For>
       </div>
-      <div id="messages">
-        <For each={tabs()}>
-          {(item, idx) => (
-            <Chatroom
-              channelName={item}
-              isActive={idx() === currTabIdx()}
-            ></Chatroom>
-          )}
-        </For>
-      </div>
+      <For each={tabs()}>
+        {(item, idx) => (
+          <Chatroom
+            channelName={item}
+            isActive={idx() === currTabIdx()}
+          ></Chatroom>
+        )}
+      </For>
       <div id="send-msg-field">
         <input
           type="text"
