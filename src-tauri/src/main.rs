@@ -1,61 +1,24 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Mutex;
+
 use twitch_irc::login::StaticLoginCredentials;
 use twitch_irc::message::ServerMessage;
-use twitch_irc::transport::tcp::{TCPTransport, TLS};
-use twitch_irc::TwitchIRCClient;
-use twitch_irc::{ClientConfig, SecureTCPTransport};
+use twitch_irc::ClientConfig;
 
-type Client = TwitchIRCClient<TCPTransport<TLS>, StaticLoginCredentials>;
-type TIRCCredentials = TwitchIRCClient<SecureTCPTransport, StaticLoginCredentials>;
-
-use tauri::{Manager, State};
+use tauri::Manager;
 
 extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
-use std::sync::Mutex;
 
-#[derive(Clone, Default)]
-struct Config {
-    channels: Vec<String>,
-}
+use charon::TIRCCredentials;
 
-#[tauri::command]
-async fn send_message(
-    channel_name: String,
-    message: String,
-    client: State<'_, Client>,
-) -> Result<bool, ()> {
-    let res = client.inner().say(channel_name, message).await;
+mod config;
+use config::Config;
 
-    match res {
-        Ok(_) => Ok(true),
-        Err(_) => Err(()),
-    }
-}
-
-#[tauri::command]
-fn join_channel(channel_name: String, anon_client: State<'_, Mutex<Client>>) -> Result<bool, ()> {
-    let res = anon_client.inner().lock().unwrap().join(channel_name);
-
-    match res {
-        Ok(_) => Ok(true),
-        Err(_) => Err(()),
-    }
-}
-
-#[tauri::command]
-fn part_channel(channel_name: String, anon_client: State<'_, Mutex<Client>>) -> Result<bool, ()> {
-    anon_client.inner().lock().unwrap().part(channel_name);
-    Ok(true)
-}
-
-#[tauri::command]
-fn fetch_config(config: State<'_, Config>) -> Config {
-    config.inner().clone()
-}
+mod commands;
 
 #[derive(Clone, serde::Serialize)]
 struct MessagePayload {
@@ -76,11 +39,9 @@ async fn main() {
         Some(std::env::var("TWITCH.OAUTH").unwrap()),
     )));
 
-    let config = Config {
-        channels: vec!["pepega00000".into(), "gkey".to_string()],
-    };
+    let config = Config::from_config_file().unwrap();
 
-    for c in config.channels {
+    for c in &config.channels {
         client.join(c.clone()).unwrap();
         anon_client.join(c.clone()).unwrap();
     }
@@ -91,10 +52,11 @@ async fn main() {
 
             app_handle.manage(client);
             app_handle.manage(Mutex::new(anon_client));
+            app_handle.manage(Mutex::new(config));
 
             tokio::spawn(async move {
                 while let Some(message) = incoming_messages.recv().await {
-                    println!("Received message: {:?}", message);
+                    // println!("Received message: {:?}", message);
                     match message {
                         ServerMessage::Privmsg(privmsg) => {
                             let event_name = format!("chat-msg__{}", privmsg.channel_login);
@@ -123,9 +85,11 @@ async fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            send_message,
-            join_channel,
-            part_channel
+            commands::send_message,
+            commands::join_channel,
+            commands::part_channel,
+            commands::fetch_config,
+            commands::save_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
