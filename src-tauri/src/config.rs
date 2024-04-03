@@ -10,6 +10,8 @@ use directories::ProjectDirs;
 
 use anyhow::{self, Context};
 
+use tracing::info;
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
     pub channels: Vec<String>,
@@ -49,6 +51,7 @@ impl Config {
     }
 
     pub fn from_config_file() -> anyhow::Result<Config> {
+        info!("fetching config from file");
         let config_dir = Self::scaffold_dir()?;
         let config_file = config_dir.join("config.json");
 
@@ -61,6 +64,7 @@ impl Config {
     }
 
     pub fn save_to_file(&self) -> anyhow::Result<()> {
+        info!("saving config to file");
         let config_dir = Self::scaffold_dir()?;
         let config_file = config_dir.join("config.json");
 

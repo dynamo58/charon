@@ -9,6 +9,9 @@ use twitch_irc::ClientConfig;
 
 use tauri::Manager;
 
+use tracing::info;
+use tracing_subscriber;
+
 extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
@@ -29,15 +32,20 @@ struct MessagePayload {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt::init();
     dotenv().ok();
 
     let config = ClientConfig::default();
     let (mut incoming_messages, anon_client) = TIRCCredentials::new(config);
 
+    info!("inited anon client");
+
     let (_, client) = TIRCCredentials::new(ClientConfig::new_simple(StaticLoginCredentials::new(
         std::env::var("TWITCH.USERNAME").unwrap(),
         Some(std::env::var("TWITCH.OAUTH").unwrap()),
     )));
+
+    info!("inited user client");
 
     let config = Config::from_config_file().unwrap();
 

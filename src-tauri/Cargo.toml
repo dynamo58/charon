@@ -17,6 +17,8 @@ tokio = { version = "1.37.0", features = ["full"] }
 dotenv = "0.15.0"
 directories = "5.0.1"
 anyhow = "1.0.81"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
