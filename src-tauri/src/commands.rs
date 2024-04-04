@@ -1,47 +1,68 @@
+use std::sync::Arc;
 use std::sync::Mutex;
+use tokio::sync::Mutex as TMutex;
 
 use tauri::State;
 use tracing::info;
 
 use crate::config::Config;
-use charon::Client;
+use charon::Connections;
 
 #[tauri::command]
-pub async fn send_message(
+pub async fn send_message<'a>(
     channel_name: String,
     message: String,
-    client: State<'_, Client>,
-) -> Result<bool, ()> {
+    conns: State<'_, Arc<TMutex<Connections<'_>>>>,
+) -> Result<String, String> {
     info!("client is sending message to #{}", &channel_name);
-    let res = client.inner().say(channel_name, message).await;
+
+    let c = Arc::clone(&conns);
+
+    let res = {
+        let guard = c.lock().await;
+        guard.client.say(channel_name, message).await
+    };
 
     match res {
-        Ok(_) => Ok(true),
-        Err(_) => Err(()),
+        Ok(_) => Ok("Message sent successfully".into()),
+        Err(_) => Err("Error sending message".into()),
     }
 }
 
 #[tauri::command]
-pub fn join_channel(
+pub async fn join_channel(
     channel_name: String,
-    anon_client: State<'_, Mutex<Client>>,
-) -> Result<bool, ()> {
+    conns: State<'_, Arc<TMutex<Connections<'_>>>>,
+) -> Result<String, String> {
     info!("client is joining #{}", &channel_name);
-    let res = anon_client.inner().lock().unwrap().join(channel_name);
+
+    let c = Arc::clone(&conns);
+
+    let res = {
+        let guard = c.lock().await;
+        guard.anon_client.join(channel_name)
+    };
 
     match res {
-        Ok(_) => Ok(true),
-        Err(_) => Err(()),
+        Ok(_) => Ok("Channel joined.".into()),
+        Err(_) => Err("Error joining channel.".into()),
     }
 }
 
 #[tauri::command]
-pub fn part_channel(
+pub async fn part_channel(
     channel_name: String,
-    anon_client: State<'_, Mutex<Client>>,
+    conns: State<'_, Arc<TMutex<Connections<'_>>>>,
 ) -> Result<bool, ()> {
     info!("client is parting #{}", &channel_name);
-    anon_client.inner().lock().unwrap().part(channel_name);
+
+    let c = Arc::clone(&conns);
+
+    {
+        let guard = c.lock().await;
+        guard.anon_client.part(channel_name);
+    }
+
     Ok(true)
 }
 
