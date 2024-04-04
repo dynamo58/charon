@@ -5,10 +5,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use tokio::sync::Mutex as TMutex;
 
-use twitch_irc::message::ServerMessage;
-
-use tauri::Manager;
-
 use tracing_subscriber;
 
 extern crate dotenv;
@@ -33,44 +29,27 @@ async fn main() {
         connections.anon_client.join(c.clone()).unwrap();
     }
 
+    // charon::Data::fetch().await.unwrap();
+
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle();
 
-            app_handle.manage(Mutex::new(config));
-            app_handle.manage(Arc::new(TMutex::new(connections)));
-
             tokio::spawn(async move {
                 while let Some(message) = incoming_messages.recv().await {
                     println!("Received message: {:#?}", message);
-                    match message {
-                        ServerMessage::Privmsg(privmsg) => {
-                            let event_name = format!("privmsg__{}", privmsg.channel_login);
-                            app_handle
-                                .emit_all(
-                                    &event_name,
-                                    payload::PrivmsgPayload::from_privmsg(privmsg),
-                                )
-                                .unwrap();
-                        }
-                        ServerMessage::UserNotice(usrnotice) => {
-                            let event_name = format!("usernotice__{}", usrnotice.channel_login);
-                            app_handle
-                                .emit_all(
-                                    &event_name,
-                                    payload::UsernoticePayload::from_usernotice(usrnotice),
-                                )
-                                .unwrap();
-                        }
-                        _ => {}
-                    }
+
+                    charon::handle_received_message(&app_handle, message);
                 }
             });
 
             Ok(())
         })
+        .manage(Mutex::new(config))
+        .manage(Arc::new(TMutex::new(connections)))
         .invoke_handler(tauri::generate_handler![
             commands::send_message,
+            commands::get_recent_messages,
             commands::join_channel,
             commands::part_channel,
             commands::fetch_config,

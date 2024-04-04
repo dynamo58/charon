@@ -20,6 +20,32 @@ pub type TIRCCredentials = TwitchIRCClient<SecureTCPTransport, StaticLoginCreden
 
 pub type MessageReceiver = UnboundedReceiver<ServerMessage>;
 
+use tauri::{AppHandle, Manager};
+
+pub mod apis;
+mod payload;
+
+pub fn handle_received_message(handle: &AppHandle, message: ServerMessage) {
+    match message {
+        ServerMessage::Privmsg(privmsg) => {
+            let event_name = format!("privmsg__{}", privmsg.channel_login);
+            handle
+                .emit_all(&event_name, payload::PrivmsgPayload::from_privmsg(privmsg))
+                .unwrap();
+        }
+        ServerMessage::UserNotice(usrnotice) => {
+            let event_name = format!("usernotice__{}", usrnotice.channel_login);
+            handle
+                .emit_all(
+                    &event_name,
+                    payload::UsernoticePayload::from_usernotice(usrnotice),
+                )
+                .unwrap();
+        }
+        _ => {}
+    }
+}
+
 pub struct Connections<'a> {
     /// the actual client that is used to send messages
     pub client: Client,

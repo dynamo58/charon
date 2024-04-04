@@ -1,12 +1,16 @@
+use charon::handle_received_message;
 use std::sync::Arc;
 use std::sync::Mutex;
 use tokio::sync::Mutex as TMutex;
+use twitch_irc::message::ServerMessage;
 
 use tauri::State;
 use tracing::info;
 
 use crate::config::Config;
 use charon::Connections;
+
+use charon::apis::recent_messages;
 
 #[tauri::command]
 pub async fn send_message<'a>(
@@ -46,6 +50,27 @@ pub async fn join_channel(
     match res {
         Ok(_) => Ok("Channel joined.".into()),
         Err(_) => Err("Error joining channel.".into()),
+    }
+}
+
+#[tauri::command]
+/// will stream recent messages to the given channel (using external API)
+pub async fn get_recent_messages(
+    channel_name: String,
+    app_handle: tauri::AppHandle,
+) -> Result<String, String> {
+    info!("client wants recent messages for #{}", &channel_name);
+
+    if let Ok(msgs_res) = recent_messages::fetch(channel_name).await {
+        for msg in msgs_res.messages {
+            let irc_msg = twitch_irc::message::IRCMessage::parse(msg.as_str()).unwrap();
+            let server_msg = ServerMessage::try_from(irc_msg).unwrap();
+            handle_received_message(&app_handle, server_msg);
+        }
+
+        Ok("Messages transmitted successfully.".into())
+    } else {
+        Err("Failed to fetch recent messages.".into())
     }
 }
 
