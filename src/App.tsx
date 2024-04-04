@@ -5,8 +5,44 @@ import Chatroom from "./components/Chatroom";
 
 import Tab from "./components/Tab";
 import { useGlobalContext } from "./store";
+import { styled } from "solid-styled-components";
+
+const AppDiv = styled.div`
+  background-color: ${(props) => props.theme?.colors.bgMain};
+  color: ${(props) => props.theme?.colors.fgMain};
+  height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+`;
+
+const TabDiv = styled.div``;
+
+const ChatroomDiv = styled.div<{ tdr: HTMLDivElement }>`
+  background-color: ${(props) => props.theme?.colors.bgSec};
+  flex-grow: 1;
+  overflow-x: hidden;
+  overflow-y: overlay;
+  overflow-wrap: break-word;
+`;
+
+const MessageDiv = styled.div`
+  & > input {
+    width: 100%;
+    height: 3em;
+    border: none;
+    background-color: ${(props) => props.theme?.colors.bgMain};
+    color: ${(props) => props.theme?.colors.fgMain};
+  }
+
+  & > input:focus {
+    outline: none;
+  }
+`;
 
 function App() {
+  let topBarRef: HTMLDivElement;
   const { tabs, currTabIdx } = useGlobalContext();
   let messageInputRef: HTMLInputElement;
   let [message, setMessage] = createSignal<string>("");
@@ -25,8 +61,8 @@ function App() {
   };
 
   return (
-    <>
-      <div id="tabs">
+    <AppDiv>
+      <TabDiv ref={topBarRef!}>
         <For each={tabs()}>
           {(item, idx) => (
             <Tab
@@ -37,24 +73,26 @@ function App() {
             ></Tab>
           )}
         </For>
-      </div>
-      <For each={tabs()}>
-        {(item, idx) => (
-          <Chatroom
-            channelName={item}
-            isActive={idx() === currTabIdx()}
-          ></Chatroom>
-        )}
-      </For>
-      <div id="send-msg-field">
+      </TabDiv>
+      <ChatroomDiv tdr={topBarRef!}>
+        <For each={tabs()}>
+          {(item, idx) => (
+            <Chatroom
+              channelName={item}
+              isActive={idx() === currTabIdx()}
+            ></Chatroom>
+          )}
+        </For>
+      </ChatroomDiv>
+      <MessageDiv>
         <input
           type="text"
           ref={messageInputRef!}
           onChange={(val) => setMessage((_) => val.target.value)}
           onkeyup={handleMessageSubmission}
         />
-      </div>
-    </>
+      </MessageDiv>
+    </AppDiv>
   );
 }
 

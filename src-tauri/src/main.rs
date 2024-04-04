@@ -18,17 +18,9 @@ use std::env;
 
 use charon::TIRCCredentials;
 
-mod config;
-use config::Config;
-
 mod commands;
-
-#[derive(Clone, serde::Serialize)]
-struct MessagePayload {
-    sender_nick: String,
-    color: String,
-    message: String,
-}
+mod config;
+mod payload;
 
 #[tokio::main]
 async fn main() {
@@ -47,7 +39,7 @@ async fn main() {
 
     info!("inited user client");
 
-    let config = Config::from_config_file().unwrap();
+    let config = config::Config::from_config_file().unwrap();
 
     for c in &config.channels {
         client.join(c.clone()).unwrap();
@@ -59,29 +51,32 @@ async fn main() {
             let app_handle = app.handle();
 
             app_handle.manage(client);
+            // this mutex is completely unncessary, it is only there becausi the tauri manager
+            // cannot differentiate between more managed items of the same type.
+            // TODO: refactor for them to be... part of a common struct that would get
+            // passed around instead?
             app_handle.manage(Mutex::new(anon_client));
             app_handle.manage(Mutex::new(config));
 
             tokio::spawn(async move {
                 while let Some(message) = incoming_messages.recv().await {
-                    // println!("Received message: {:?}", message);
+                    println!("Received message: {:#?}", message);
                     match message {
                         ServerMessage::Privmsg(privmsg) => {
-                            let event_name = format!("chat-msg__{}", privmsg.channel_login);
-                            let color = if let Some(c) = privmsg.name_color {
-                                c.to_string()
-                            } else {
-                                "#575757".into()
-                            };
-
+                            let event_name = format!("privmsg__{}", privmsg.channel_login);
                             app_handle
                                 .emit_all(
                                     &event_name,
-                                    MessagePayload {
-                                        sender_nick: privmsg.sender.name,
-                                        message: privmsg.message_text,
-                                        color: color,
-                                    },
+                                    payload::PrivmsgPayload::from_privmsg(privmsg),
+                                )
+                                .unwrap();
+                        }
+                        ServerMessage::UserNotice(usrnotice) => {
+                            let event_name = format!("usernotice__{}", usrnotice.channel_login);
+                            app_handle
+                                .emit_all(
+                                    &event_name,
+                                    payload::UsernoticePayload::from_usernotice(usrnotice),
                                 )
                                 .unwrap();
                         }

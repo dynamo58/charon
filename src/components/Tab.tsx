@@ -1,4 +1,4 @@
-import { JSXElement, createSignal, onMount } from "solid-js";
+import { JSXElement } from "solid-js";
 import { styled } from "solid-styled-components";
 import { useGlobalContext } from "../store";
 
@@ -9,8 +9,7 @@ const TabDiv = styled.span<{ isActive: boolean; isChannelLive: boolean }>`
   background-color: ${(props) =>
     props.isActive ? props.theme?.colors.bgTern : props.theme?.colors.bgSec};
   font-size: 0.8em;
-  padding: 3px;
-  height: 100%;
+  padding: 0 3px;
   display: inline-block;
   margin-left: 5px;
   cursor: pointer;
