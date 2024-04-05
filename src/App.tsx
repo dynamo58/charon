@@ -23,8 +23,10 @@ const ChatroomDiv = styled.div<{ tdr: HTMLDivElement }>`
   background-color: ${(props) => props.theme?.colors.bgSec};
   flex-grow: 1;
   overflow-x: hidden;
-  overflow-y: overlay;
   overflow-wrap: break-word;
+  &:hover {
+    overflow-y: overlay;
+  }
 `;
 
 const MessageDiv = styled.div`

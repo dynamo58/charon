@@ -2,9 +2,14 @@ export interface Config {
   channels: string[],
 }
 
-export enum IPayloadKind {
+export enum PayloadKind {
   Privmsg,
   Usernotice,
+}
+
+export interface IBadgeInfo {
+  title: string,
+  image_url_base: string,
 }
 
 export interface IPrivmgPayload {
@@ -12,6 +17,7 @@ export interface IPrivmgPayload {
   color: string,
   message: string,
   is_first_message: boolean,
+  badges: IBadgeInfo[],
 }
 
 export interface IUsernoticePayload {
@@ -20,4 +26,5 @@ export interface IUsernoticePayload {
   message: string,
   event_name: string,
   system_message: string,
+  badges: IBadgeInfo[],
 }

@@ -22,15 +22,22 @@ pub type MessageReceiver = UnboundedReceiver<ServerMessage>;
 
 use tauri::{AppHandle, Manager};
 
-pub mod apis;
-mod payload;
+use crate::data;
+use crate::payload;
 
-pub fn handle_received_message(handle: &AppHandle, message: ServerMessage) {
+pub fn handle_received_message(
+    handle: &AppHandle,
+    message: ServerMessage,
+    dataset: &data::Dataset,
+) {
     match message {
         ServerMessage::Privmsg(privmsg) => {
             let event_name = format!("privmsg__{}", privmsg.channel_login);
             handle
-                .emit_all(&event_name, payload::PrivmsgPayload::from_privmsg(privmsg))
+                .emit_all(
+                    &event_name,
+                    payload::PrivmsgPayload::from_privmsg(privmsg, dataset),
+                )
                 .unwrap();
         }
         ServerMessage::UserNotice(usrnotice) => {
@@ -38,13 +45,20 @@ pub fn handle_received_message(handle: &AppHandle, message: ServerMessage) {
             handle
                 .emit_all(
                     &event_name,
-                    payload::UsernoticePayload::from_usernotice(usrnotice),
+                    payload::UsernoticePayload::from_usernotice(usrnotice, dataset),
                 )
                 .unwrap();
         }
         _ => {}
     }
 }
+
+// struct TwitchAuth {
+//     username: String,
+//     client_id: String,
+//     user_id: String,
+//     oauth: String,
+// }
 
 pub struct Connections<'a> {
     /// the actual client that is used to send messages

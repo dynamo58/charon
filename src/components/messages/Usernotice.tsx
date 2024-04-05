@@ -1,6 +1,7 @@
 import { styled } from "solid-styled-components";
 import { IUsernoticePayload } from "../../types";
-import { onMount } from "solid-js";
+import { For } from "solid-js";
+import Badge from "./Badge";
 
 const UsernoticeDiv = styled.div`
   width: 100%;
@@ -13,13 +14,10 @@ const EventDiv = styled.div`
 `;
 
 const Usernotice = (props: IUsernoticePayload) => {
-  onMount(() => {
-    console.log("buh", props);
-  });
-
   return (
     <>
       <UsernoticeDiv>
+        <For each={props.badges}>{(item, _idx) => <Badge {...item} />}</For>
         <b
           style={{
             color: props.color,

@@ -11,11 +11,17 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 
-use charon::Connections;
-
+mod apis;
+mod badge;
 mod commands;
 mod config;
+mod data;
 mod payload;
+mod shared;
+
+use data::Dataset;
+use shared::handle_received_message;
+use shared::Connections;
 
 #[tokio::main]
 async fn main() {
@@ -29,23 +35,37 @@ async fn main() {
         connections.anon_client.join(c.clone()).unwrap();
     }
 
-    // charon::Data::fetch().await.unwrap();
+    let data = Dataset::from_config(&config, &connections.helix_user_token, &connections.helix)
+        .await
+        .expect("to gather config data successfully");
+
+    let data = Arc::new(TMutex::new(data));
+    let data2 = data.clone();
 
     tauri::Builder::default()
-        .setup(|app| {
+        .setup(move |app| {
             let app_handle = app.handle();
 
+            let data3 = data2.clone();
             tokio::spawn(async move {
-                while let Some(message) = incoming_messages.recv().await {
-                    println!("Received message: {:#?}", message);
+                {
+                    while let Some(message) = incoming_messages.recv().await {
+                        println!("Received some message");
+                        // println!("Received message: {:#?}", message);
 
-                    charon::handle_received_message(&app_handle, message);
+                        handle_received_message(
+                            &app_handle,
+                            message,
+                            &data3.lock().await.to_owned(),
+                        );
+                    }
                 }
             });
 
             Ok(())
         })
         .manage(Mutex::new(config))
+        .manage(data)
         .manage(Arc::new(TMutex::new(connections)))
         .invoke_handler(tauri::generate_handler![
             commands::send_message,
