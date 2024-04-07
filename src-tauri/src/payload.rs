@@ -128,7 +128,7 @@ impl UsernoticePayload {
 }
 
 fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String {
-    let mut out = s.clone();
+    let mut out = format!("{s}");
 
     // links
     let re = Regex::new(r"\b([^\s\d][^\s\d.]+?\.[^\s\d.]+[^\s\d])\b").unwrap();

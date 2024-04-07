@@ -51,7 +51,7 @@ async fn main() {
                 {
                     while let Some(message) = incoming_messages.recv().await {
                         // println!("Received some message");
-                        println!("Received message: {:#?}", message);
+                        // println!("Received message: {:#?}", message);
 
                         handle_received_message(
                             &app_handle,
