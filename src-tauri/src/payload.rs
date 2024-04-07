@@ -2,6 +2,7 @@ use twitch_irc::message::{PrivmsgMessage, UserNoticeMessage};
 
 const DEFAULT_USER_COLOR: &'static str = "#575757";
 
+use crate::emote::InjectNativeEmotes;
 use crate::{badge::BadgeInfo, data::Dataset};
 
 #[derive(Clone, serde::Serialize)]
@@ -47,8 +48,8 @@ impl PrivmsgPayload {
         }
 
         PrivmsgPayload {
-            sender_nick: privmsg.sender.name,
-            message: privmsg.message_text,
+            sender_nick: privmsg.sender.name.clone(),
+            message: privmsg.message_text.inject_native_emotes(&privmsg),
             color,
             badges: sender_badges,
             is_first_message: privmsg.source.tags.0.get("first-msg")

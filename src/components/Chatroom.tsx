@@ -13,7 +13,10 @@ const ChatroomDiv = styled.span<{ isActive: boolean }>`
   padding-right: 0.3em;
   display: ${(props) => (props.isActive ? "block" : "none")};
   background-color: ${(props) => props.theme?.colors.bgSec};
-  //
+  & .emote {
+    height: 2em !important;
+    display: inline-block;
+  }
 `;
 
 interface IChatroomProps {

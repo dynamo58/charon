@@ -16,6 +16,7 @@ mod badge;
 mod commands;
 mod config;
 mod data;
+mod emote;
 mod payload;
 mod shared;
 
@@ -50,8 +51,8 @@ async fn main() {
             tokio::spawn(async move {
                 {
                     while let Some(message) = incoming_messages.recv().await {
-                        println!("Received some message");
-                        // println!("Received message: {:#?}", message);
+                        // println!("Received some message");
+                        println!("Received message: {:#?}", message);
 
                         handle_received_message(
                             &app_handle,

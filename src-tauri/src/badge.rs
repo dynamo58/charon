@@ -7,4 +7,4 @@ pub struct BadgeInfo {
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
-pub struct BadgeSet(pub HashMap<String, HashMap<String, BadgeInfo>>);
+pub struct NativeBadgeSet(pub HashMap<String, HashMap<String, BadgeInfo>>);

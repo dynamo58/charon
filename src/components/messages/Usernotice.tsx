@@ -6,6 +6,10 @@ import Badge from "./Badge";
 const UsernoticeDiv = styled.div`
   width: 100%;
   background-color: #9514cc33;
+  & > * {
+    display: inline-block;
+    vertical-align: middle;
+  }
 `;
 
 const EventDiv = styled.div`

@@ -1,22 +1,26 @@
 use std::collections::HashMap;
 
-use crate::apis::helix::{get_channel_badges_from_id, get_global_badges};
+use crate::{
+    apis::helix::{get_channel_badges_from_id, get_global_badges},
+    // emote::EmoteRepertoire,
+};
 use twitch_api::{helix::channels::ChannelInformation, twitch_oauth2::UserToken, HelixClient};
 
 use anyhow::Context;
 
-use crate::{badge::BadgeSet, config::Config};
+use crate::{badge::NativeBadgeSet, config::Config};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ChannelData {
-    pub badges: BadgeSet,
     pub info: ChannelInformation,
+    pub badges: NativeBadgeSet,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, Default)]
 pub struct Dataset {
     pub channel_data: HashMap<String, ChannelData>,
-    pub global_badges: BadgeSet,
+    pub global_badges: NativeBadgeSet,
+    // pub emotes: EmoteRepertoire,
 }
 
 impl Dataset {

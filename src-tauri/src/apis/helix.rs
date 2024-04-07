@@ -8,49 +8,17 @@ use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BadgesRes {
-    pub data: Vec<Daum>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Daum {
-    #[serde(rename = "set_id")]
-    pub set_id: String,
-    pub versions: Vec<Version>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Version {
-    pub id: String,
-    #[serde(rename = "image_url_1x")]
-    pub image_url_1x: String,
-    #[serde(rename = "image_url_2x")]
-    pub image_url_2x: String,
-    #[serde(rename = "image_url_4x")]
-    pub image_url_4x: String,
-    pub title: String,
-    pub description: String,
-    #[serde(rename = "click_action")]
-    pub click_action: Option<String>,
-    #[serde(rename = "click_url")]
-    pub click_url: Option<String>,
-}
-
 use twitch_api::twitch_oauth2::TwitchToken;
 use twitch_api::twitch_oauth2::UserToken;
 
-use crate::badge::{BadgeInfo, BadgeSet};
+use crate::badge::{BadgeInfo, NativeBadgeSet};
 
 use super::ffz;
 
 pub async fn get_channel_badges_from_id(
     channel_id: String,
     auth: &UserToken,
-) -> anyhow::Result<BadgeSet> {
+) -> anyhow::Result<NativeBadgeSet> {
     let res = Client::new()
         .get(&format!(
             "https://api.twitch.tv/helix/chat/badges?broadcaster_id={channel_id}"
@@ -65,7 +33,7 @@ pub async fn get_channel_badges_from_id(
         .json::<BadgesRes>()
         .await?;
 
-    let mut badge_set = BadgeSet(HashMap::new());
+    let mut badge_set = NativeBadgeSet(HashMap::new());
 
     for set_of_badges in &res.data {
         let set_id = set_of_badges.set_id.to_string();
@@ -133,7 +101,7 @@ pub async fn get_channel_badges_from_id(
     Ok(badge_set)
 }
 
-pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<BadgeSet> {
+pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<NativeBadgeSet> {
     let res = Client::new()
         .get("https://api.twitch.tv/helix/chat/badges/global")
         .header("Client-ID", auth.client_id().to_string())
@@ -146,7 +114,7 @@ pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<BadgeSet> {
         .json::<BadgesRes>()
         .await?;
 
-    let mut badge_set = BadgeSet(HashMap::new());
+    let mut badge_set = NativeBadgeSet(HashMap::new());
 
     for set_of_badges in &res.data {
         let set_id = set_of_badges.set_id.to_string();
@@ -175,4 +143,104 @@ pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<BadgeSet> {
     }
 
     Ok(badge_set)
+}
+
+pub async fn get_global_emotes(auth: &UserToken) -> anyhow::Result<GlobalEmotesRes> {
+    let res = Client::new()
+        .get("https://api.twitch.tv/helix/chat/emotes/global")
+        .header("Client-ID", auth.client_id().to_string())
+        .header(
+            "Authorization",
+            format!("Bearer {}", auth.access_token.secret()),
+        )
+        .send()
+        .await?
+        .json::<GlobalEmotesRes>()
+        .await?;
+
+    todo!()
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GlobalEmotesRes {
+    pub data: Vec<Daumm>,
+    pub template: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Daumm {
+    pub id: String,
+    pub name: String,
+    pub images: Images,
+    pub format: Vec<Format>,
+    pub scale: Vec<Scale>,
+    #[serde(rename = "theme_mode")]
+    pub theme_mode: Vec<ThemeMode>,
+}
+
+#[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
+pub enum Format {
+    Static,
+    Animated,
+}
+
+#[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
+pub enum ThemeMode {
+    Light,
+    Dark,
+}
+
+#[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
+pub enum Scale {
+    #[serde(rename = "1.0")]
+    One,
+    #[serde(rename = "2.0")]
+    Two,
+    #[serde(rename = "3.0")]
+    Three,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Images {
+    #[serde(rename = "url_1x")]
+    pub url_1x: String,
+    #[serde(rename = "url_2x")]
+    pub url_2x: String,
+    #[serde(rename = "url_4x")]
+    pub url_4x: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BadgesRes {
+    pub data: Vec<Daum>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Daum {
+    #[serde(rename = "set_id")]
+    pub set_id: String,
+    pub versions: Vec<Version>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Version {
+    pub id: String,
+    #[serde(rename = "image_url_1x")]
+    pub image_url_1x: String,
+    #[serde(rename = "image_url_2x")]
+    pub image_url_2x: String,
+    #[serde(rename = "image_url_4x")]
+    pub image_url_4x: String,
+    pub title: String,
+    pub description: String,
+    #[serde(rename = "click_action")]
+    pub click_action: Option<String>,
+    #[serde(rename = "click_url")]
+    pub click_url: Option<String>,
 }

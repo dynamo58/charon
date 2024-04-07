@@ -1,15 +1,25 @@
 import { styled } from "solid-styled-components";
 import { IPrivmgPayload } from "../../types";
 import Badge from "./Badge";
-import { For } from "solid-js";
+import { For, onMount } from "solid-js";
 
 const PrivmsgDiv = styled.div<{ is_first: boolean }>`
   width: 100%;
   background-color: ${(props) => (props.is_first ? "#00ff0033" : "initial")};
   vertical-align: baseline;
+  & > * {
+    display: inline-block;
+    vertical-align: middle;
+  }
 `;
 
 const Privmsg = (props: IPrivmgPayload) => {
+  let messageRef: HTMLSpanElement;
+
+  onMount(() => {
+    messageRef.innerHTML = props.message;
+  });
+
   return (
     <>
       <PrivmsgDiv is_first={props.is_first_message}>
@@ -19,9 +29,9 @@ const Privmsg = (props: IPrivmgPayload) => {
             color: props.color,
           }}
         >
-          {props.sender_nick}:{" "}
+          {props.sender_nick}:&nbsp;
         </b>
-        <span>{props.message}</span>
+        <span ref={messageRef!}></span>
       </PrivmsgDiv>
     </>
   );
