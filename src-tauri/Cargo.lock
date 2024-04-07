@@ -321,6 +321,7 @@ dependencies = [
  "anyhow",
  "directories",
  "dotenv",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

@@ -16,7 +16,6 @@ mod badge;
 mod commands;
 mod config;
 mod data;
-mod emote;
 mod payload;
 mod shared;
 
