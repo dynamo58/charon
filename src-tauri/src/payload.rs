@@ -1,4 +1,5 @@
 use regex::Regex;
+use tracing::warn;
 use twitch_irc::message::{PrivmsgMessage, UserNoticeMessage};
 
 const DEFAULT_USER_COLOR: &'static str = "#575757";
@@ -39,9 +40,23 @@ impl PrivmsgPayload {
                     let badge_id = chunks[1];
 
                     if let Some(set) = channel_badges.get(set_id) {
-                        sender_badges.push(set.get(badge_id).unwrap().clone());
+                        if let Some(badge) = set.get(badge_id) {
+                            sender_badges.push(badge.clone());
+                        } else {
+                            warn!(
+                                "Badge not found; channel: {}, set id: {}, badge id: {}",
+                                privmsg.channel_login, set_id, badge_id
+                            );
+                        }
                     } else if let Some(set) = dataset.global_badges.0.get(set_id) {
-                        sender_badges.push(set.get(badge_id).unwrap().clone());
+                        if let Some(badge) = set.get(badge_id) {
+                            sender_badges.push(badge.clone());
+                        } else {
+                            warn!(
+                                "Badge not found; channel: {}, set id: {}, badge id: {}",
+                                privmsg.channel_login, set_id, badge_id
+                            );
+                        }
                     }
                 }
             }
