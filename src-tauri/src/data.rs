@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{
-    apis::helix::{get_channel_badges_from_id, get_global_badges},
-    // emote::EmoteRepertoire,
+use crate::apis::{
+    adamcy::{get_all_3rd_party_channel_emotes, AdamcyEmoteInfo},
+    helix::{get_channel_badges_from_id, get_global_badges},
 };
 use twitch_api::{helix::channels::ChannelInformation, twitch_oauth2::UserToken, HelixClient};
 
@@ -14,6 +14,7 @@ use crate::{badge::NativeBadgeSet, config::Config};
 pub struct ChannelData {
     pub info: ChannelInformation,
     pub badges: NativeBadgeSet,
+    pub third_party_emotes: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, Default)]
@@ -56,9 +57,17 @@ impl Dataset {
             .await?
             .context("oopsie")?;
         let badges = get_channel_badges_from_id(info.broadcaster_id.to_string(), &auth).await?;
+        let third_party_emotes =
+            get_all_3rd_party_channel_emotes(info.broadcaster_login.as_str()).await?;
 
-        self.channel_data
-            .insert(channel_name.clone(), ChannelData { info, badges });
+        self.channel_data.insert(
+            channel_name.clone(),
+            ChannelData {
+                info,
+                badges,
+                third_party_emotes,
+            },
+        );
 
         Ok(())
     }

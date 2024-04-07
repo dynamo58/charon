@@ -15,6 +15,12 @@ const AppDiv = styled.div`
   width: 100vw;
   display: flex;
   flex-direction: column;
+
+  & a {
+    color: ${(props) => props.theme?.colors.accent2};
+    text-decoration: none;
+    font-weight: 600;
+  }
 `;
 
 const TabDiv = styled.div``;

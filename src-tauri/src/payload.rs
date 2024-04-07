@@ -1,6 +1,6 @@
 use regex::Regex;
 use tracing::warn;
-use twitch_irc::message::{PrivmsgMessage, UserNoticeMessage};
+use twitch_irc::message::{PrivmsgMessage, ReplyToMessage, UserNoticeMessage};
 
 const DEFAULT_USER_COLOR: &'static str = "#575757";
 
@@ -64,7 +64,7 @@ impl PrivmsgPayload {
 
         PrivmsgPayload {
             sender_nick: privmsg.sender.name.clone(),
-            message: inject_message(privmsg.message_text.clone(), &privmsg),
+            message: inject_message(privmsg.message_text.clone(), &privmsg, dataset),
             color,
             badges: sender_badges,
             is_first_message: privmsg.source.tags.0.get("first-msg")
@@ -127,23 +127,42 @@ impl UsernoticePayload {
     }
 }
 
-fn inject_message(s: String, privmsg: &PrivmsgMessage) -> String {
+fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String {
     let mut out = s.clone();
 
+    // links
     let re = Regex::new(r"\b([^\s\d][^\s\d.]+?\.[^\s\d.]+[^\s\d])\b").unwrap();
     out = re
         .replace_all(&out, "<a target='_blank' href='$1'>$1</a>")
         .to_string();
 
-    // emotes
+    let third_party_emotes = &data
+        .channel_data
+        .get(privmsg.channel_login())
+        .unwrap()
+        .third_party_emotes;
+
+    // emotes -- native
     for emote in &privmsg.emotes {
         out = out.replace(
             &emote.code,
             &format!(
-                "<img class=\"emote\" src=\"https://static-cdn.jtvnw.net/emoticons/v2/{}/default/dark/3.0\" />",
+                "<img class='emote' src='https://static-cdn.jtvnw.net/emoticons/v2/{}/default/dark/3.0' />",
                 emote.id
             ),
         );
+    }
+
+    let words = out.split(' ').collect::<Vec<&str>>();
+    let mut out = String::new();
+
+    // emotes -- third party
+    for word in words {
+        if let Some(em) = third_party_emotes.get(word) {
+            out.push_str(&format!("<img class='emote' src='{em}' />"));
+        } else {
+            out.push_str(&format!("{word} "));
+        }
     }
 
     out
