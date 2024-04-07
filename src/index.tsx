@@ -53,7 +53,7 @@ const GlobalStyles = () => {
     :root {
       font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
       font-size: 16px;
-      line-height: 24px;
+      line-height: 16px;
       font-weight: 400;
 
       font-synthesis: none;
@@ -70,6 +70,10 @@ const GlobalStyles = () => {
       padding: 0;
       margin: 0;
       overflow: hidden;
+    }
+
+    p {
+      margin: 0.2em 0;
     }
 
     ::-webkit-scrollbar {

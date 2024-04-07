@@ -7,14 +7,17 @@ const PrivmsgDiv = styled.div<{ is_first: boolean }>`
   width: 100%;
   background-color: ${(props) => (props.is_first ? "#00ff0033" : "initial")};
   vertical-align: baseline;
-  & > * {
-    display: inline-block;
+  & * {
     vertical-align: middle;
+  }
+  margin: 0.2em 0;
+  & img {
+    margin: 0 0.2em;
   }
 `;
 
 const Privmsg = (props: IPrivmgPayload) => {
-  let messageRef: HTMLSpanElement;
+  let messageRef: HTMLDivElement;
 
   onMount(() => {
     messageRef.innerHTML = props.message;
@@ -29,9 +32,9 @@ const Privmsg = (props: IPrivmgPayload) => {
             color: props.color,
           }}
         >
-          {props.sender_nick}:&nbsp;
+          {props.sender_nick}:
         </b>
-        <span ref={messageRef!}></span>
+        <span style="padding-left: 0.3em;" ref={messageRef!}></span>
       </PrivmsgDiv>
     </>
   );

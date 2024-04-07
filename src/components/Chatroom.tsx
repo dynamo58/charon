@@ -1,4 +1,12 @@
-import { For, Match, Switch, createSignal, onMount } from "solid-js";
+import {
+  Accessor,
+  For,
+  Match,
+  Switch,
+  createEffect,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { IPrivmgPayload, IUsernoticePayload, PayloadKind } from "../types";
 import { listen } from "@tauri-apps/api/event";
 import { styled } from "solid-styled-components";
@@ -17,6 +25,10 @@ const ChatroomDiv = styled.span<{ isActive: boolean }>`
     height: 2em !important;
     display: inline-block;
   }
+  overflow-y: overlay;
+  background-color: ${(props) => props.theme?.colors.bgSec};
+  flex-grow: 1;
+  overflow-wrap: break-word;
 `;
 
 interface IChatroomProps {
@@ -45,13 +57,17 @@ const Chatroom = (props: IChatroomProps) => {
     setMessages((other_msgs) => [...other_msgs, msg]);
 
     if (lineCount >= MAX_LINE_COUNT_PER_CHAT) {
-      divRef.removeChild(divRef.firstChild!);
+      setMessages((msgs) => msgs.slice(1));
     } else {
       lineCount++;
     }
 
-    divRef.parentElement!.scrollTop = 9999;
+    divRef.scrollTop = divRef.scrollHeight;
   };
+
+  createEffect(() => {
+    if (props.isActive) divRef.scrollTop = divRef.scrollHeight;
+  });
 
   onMount(async () => {
     await listen(`privmsg__${props.channelName}`, (event: any) => {

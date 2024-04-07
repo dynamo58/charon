@@ -15,7 +15,6 @@ const AppDiv = styled.div`
   width: 100vw;
   display: flex;
   flex-direction: column;
-
   & a {
     color: ${(props) => props.theme?.colors.accent2};
     text-decoration: none;
@@ -24,16 +23,6 @@ const AppDiv = styled.div`
 `;
 
 const TabDiv = styled.div``;
-
-const ChatroomDiv = styled.div<{ tdr: HTMLDivElement }>`
-  background-color: ${(props) => props.theme?.colors.bgSec};
-  flex-grow: 1;
-  overflow-x: hidden;
-  overflow-wrap: break-word;
-  &:hover {
-    overflow-y: overlay;
-  }
-`;
 
 const MessageDiv = styled.div`
   & > input {
@@ -82,16 +71,14 @@ function App() {
           )}
         </For>
       </TabDiv>
-      <ChatroomDiv tdr={topBarRef!}>
-        <For each={tabs()}>
-          {(item, idx) => (
-            <Chatroom
-              channelName={item}
-              isActive={idx() === currTabIdx()}
-            ></Chatroom>
-          )}
-        </For>
-      </ChatroomDiv>
+      <For each={tabs()}>
+        {(item, idx) => (
+          <Chatroom
+            channelName={item}
+            isActive={idx() === currTabIdx()}
+          ></Chatroom>
+        )}
+      </For>
       <MessageDiv>
         <input
           type="text"
