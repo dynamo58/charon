@@ -2,13 +2,11 @@
 
 **⚠️ UNDER CONSTRUCTION ⚠️**
 
-**I hereby declare that I am not responsible for any consequences that arise if you choose download this software (or its source), refer to the LICENSE file for details.**
-
 </div>
 
 # About
 
-Charon (/ˈkɛərɒn/) is an Twitch chat client. Alternative to Chatterino of sorts. It aims to claim that position by (eventually) implementing all the features of native, like:
+Charon (/ˈkɛərɒn/) is an Twitch chat client. Alternative to Chatterino of sorts. It aims to claim that position by (eventually) implementing as many features of native as possible, like:
 
 - predictions,
 - voting,
@@ -18,7 +16,7 @@ Also community theming and plugin extensionality should be relatively easily ach
 
 ## Name
 
-The program is named after Greek mythology whereby Charon is the name of a ferryman bringing the dead to the underworld across the river Acheron
+The name comes from Greek mythology, where Charon is the name of a ferryman bringing the dead across the river Acheron into the underworld.
 
 # Roadmap
 
@@ -30,3 +28,11 @@ The program is named after Greek mythology whereby Charon is the name of a ferry
 - [ ] Voting
 - [ ] Predictions
 - [ ] Channel points
+
+# Feedback / bug reports
+
+- open an issue on this repo or hit me up on discord `@spalovac_mrtvol`
+
+# Contributing
+
+- generally opened to after a discussion, hit me up at discord `@spalovac_mrtvol` if considering
