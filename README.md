@@ -6,7 +6,7 @@
 
 # About
 
-Charon (/ˈkɛərɒn/) is an Twitch chat client. Alternative to Chatterino of sorts. It aims to claim that position by (eventually) implementing as many features of native as possible, like:
+Charon (/ˈkɛərɒn/) is an Twitch chat client. Alternative to [Chatterino](https://github.com/Chatterino/chatterino2) of sorts. That is indeed where much of the inspiration comes from, but the plan is for this app to eventually exceed it by (eventually) implementing as many features of native as possible, like:
 
 - predictions,
 - voting,
