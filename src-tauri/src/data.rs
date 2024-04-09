@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::apis::{
-    adamcy::{get_all_3rd_party_channel_emotes, AdamcyEmoteInfo},
+    adamcy::get_all_3rd_party_channel_emotes,
     helix::{get_channel_badges_from_id, get_global_badges},
 };
 use twitch_api::{helix::channels::ChannelInformation, twitch_oauth2::UserToken, HelixClient};

@@ -61,7 +61,9 @@ const GlobalStyles = () => {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       -webkit-text-size-adjust: 100%;
+    }
 
+    * {
       box-sizing: border-box;
     }
 
@@ -71,6 +73,7 @@ const GlobalStyles = () => {
       margin: 0;
       overflow: hidden;
     }
+
 
     p {
       margin: 0.2em 0;

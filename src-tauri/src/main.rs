@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Arc;
-use std::sync::Mutex;
 use tokio::sync::Mutex as TMutex;
 
 use tracing_subscriber;
@@ -28,18 +27,14 @@ async fn main() {
     tracing_subscriber::fmt::init();
     dotenv().ok();
 
-    let (mut incoming_messages, connections) = Connections::from_env_vars().await.unwrap();
+    let (mut incoming_messages, connections) = Connections::default();
     let config = config::Config::from_config_file().unwrap();
 
     for c in &config.channels {
         connections.anon_client.join(c.clone()).unwrap();
     }
 
-    let data = Dataset::from_config(&config, &connections.helix_user_token, &connections.helix)
-        .await
-        .expect("to gather config data successfully");
-
-    let data = Arc::new(TMutex::new(data));
+    let data = Arc::new(TMutex::new(Dataset::default()));
     let data2 = data.clone();
 
     tauri::Builder::default()
@@ -64,7 +59,7 @@ async fn main() {
 
             Ok(())
         })
-        .manage(Mutex::new(config))
+        .manage(Arc::new(TMutex::new(config)))
         .manage(data)
         .manage(Arc::new(TMutex::new(connections)))
         .invoke_handler(tauri::generate_handler![
@@ -74,6 +69,7 @@ async fn main() {
             commands::part_channel,
             commands::fetch_config,
             commands::save_config,
+            commands::authentificate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

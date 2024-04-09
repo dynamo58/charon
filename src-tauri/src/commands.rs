@@ -1,12 +1,18 @@
 use crate::data::Dataset;
 use crate::handle_received_message;
 use std::sync::Arc;
-use std::sync::Mutex;
+use tauri::Manager;
 use tokio::sync::Mutex as TMutex;
 use twitch_irc::message::ServerMessage;
 
 use tauri::State;
 use tracing::info;
+
+use std::io::{BufRead, BufReader};
+use std::io::{Read, Write};
+use std::net::SocketAddr;
+use std::net::TcpListener;
+use std::net::TcpStream;
 
 use crate::config::Config;
 use crate::Connections;
@@ -19,19 +25,18 @@ pub async fn send_message<'a>(
     message: String,
     conns: State<'_, Arc<TMutex<Connections<'_>>>>,
 ) -> Result<String, String> {
-    info!("client is sending message to #{channel_name}");
+    info!("sending message to #{channel_name}");
 
     let c = Arc::clone(&conns);
-
-    let res = {
-        let guard = c.lock().await;
-        guard.client.say(channel_name, message).await
-    };
-
-    match res {
-        Ok(_) => Ok("Message sent successfully".into()),
-        Err(_) => Err("Error sending message".into()),
+    let c = c.lock().await;
+    if let None = &c.authed {
+        return Err("Error: not logged in.".into());
     }
+    let c = c.authed.as_ref().unwrap();
+
+    c.client.say(channel_name, message).await.unwrap();
+
+    Ok("Message sent successfully".into())
 }
 
 #[tauri::command]
@@ -40,21 +45,24 @@ pub async fn join_channel(
     conns: State<'_, Arc<TMutex<Connections<'_>>>>,
     dataset: State<'_, Arc<TMutex<Dataset>>>,
 ) -> Result<String, String> {
-    info!("client is joining #{}", &channel_name);
+    info!("joining #{}", &channel_name);
 
-    let c = conns.lock().await;
+    let c = Arc::clone(&conns);
+    let c = c.lock().await;
+    if let None = &c.authed {
+        return Err("Error: not logged in.".into());
+    }
+    let conn = c.authed.as_ref().unwrap();
     let mut data = dataset.lock().await;
 
-    data.add_channel(&c.helix_user_token, &c.helix, channel_name.clone())
+    data.add_channel(&conn.helix_user_token, &conn.helix, channel_name.clone())
         .await
-        .unwrap(); // TODO: erm
+        .unwrap();
 
-    let res = c.anon_client.join(channel_name);
+    c.anon_client.join(channel_name.clone()).unwrap();
+    conn.client.join(channel_name).unwrap();
 
-    match res {
-        Ok(_) => Ok("Channel joined.".into()),
-        Err(_) => Err("Error joining channel.".into()),
-    }
+    Ok("Channel joined.".into())
 }
 
 #[tauri::command]
@@ -64,7 +72,7 @@ pub async fn get_recent_messages(
     app_handle: tauri::AppHandle,
     dataset: State<'_, Arc<TMutex<Dataset>>>,
 ) -> Result<String, String> {
-    info!("client wants recent messages for #{channel_name}");
+    info!("fetching recent messages for #{channel_name}");
 
     let c = Arc::clone(&dataset);
 
@@ -87,7 +95,7 @@ pub async fn part_channel(
     conns: State<'_, Arc<TMutex<Connections<'_>>>>,
     dataset: State<'_, Arc<TMutex<Dataset>>>,
 ) -> Result<bool, ()> {
-    info!("client is parting #{channel_name}");
+    info!("parting #{channel_name}");
 
     let c = conns.lock().await;
     let mut data = dataset.lock().await;
@@ -99,10 +107,12 @@ pub async fn part_channel(
 }
 
 #[tauri::command]
-pub fn fetch_config(config: State<'_, Mutex<Config>>) -> Result<String, String> {
-    info!("client is fetching config");
+pub async fn fetch_config(config: State<'_, Arc<TMutex<Config>>>) -> Result<String, String> {
+    info!("fetching config");
 
-    if let Ok(json_str) = serde_json::to_string(config.inner()) {
+    let config = config.lock().await;
+
+    if let Ok(json_str) = serde_json::to_string(&*config) {
         Ok(json_str)
     } else {
         Err("Error serializing config".into())
@@ -110,8 +120,11 @@ pub fn fetch_config(config: State<'_, Mutex<Config>>) -> Result<String, String> 
 }
 
 #[tauri::command]
-pub fn save_config(json_str: String, config: State<'_, Mutex<Config>>) -> Result<String, String> {
-    info!("client is saving config");
+pub async fn save_config(
+    json_str: String,
+    config: State<'_, Arc<TMutex<Config>>>,
+) -> Result<String, String> {
+    info!("saving config");
     let json = {
         if let Ok(j) = serde_json::from_str::<Config>(&json_str) {
             j
@@ -120,12 +133,134 @@ pub fn save_config(json_str: String, config: State<'_, Mutex<Config>>) -> Result
         }
     };
 
-    let mut curr = config.inner().lock().unwrap();
+    let mut curr = config.lock().await;
 
     *curr = json;
 
     match (*curr).save_to_file() {
-        Ok(_) => Ok("okidoki".into()),
+        Ok(_) => Ok("Config saved successfully".into()),
         Err(_) => Err("Error: couldn't save config".into()),
     }
+}
+
+fn get_http_body_from_tcpstream(stream: &TcpStream) -> String {
+    let mut reader = BufReader::new(stream.try_clone().unwrap());
+    let mut name = String::new();
+    loop {
+        let r = reader.read_line(&mut name).unwrap();
+        if r < 3 {
+            //detect empty line
+            break;
+        }
+    }
+    let mut size = 0;
+    let linesplit = name.split("\n");
+    for l in linesplit {
+        if l.starts_with("Content-Length") {
+            let sizeplit = l.split(":");
+            for s in sizeplit {
+                if !(s.starts_with("Content-Length")) {
+                    size = s.trim().parse::<usize>().unwrap(); //Get Content-Length
+                }
+            }
+        }
+    }
+    let mut buffer = vec![0; size]; //New Vector with size of Content
+    reader.read_exact(&mut buffer).unwrap(); //Get the Body Content.
+
+    String::from_utf8_lossy(&buffer).to_string()
+}
+
+fn try_get_token(mut stream: TcpStream) -> Option<String> {
+    let body = get_http_body_from_tcpstream(&stream);
+
+    if body.is_empty() {
+        // body is empty, therefore it must be the inital request when
+        // the user gets only redirected there from twitch auth website
+        let res = format!(
+            "{}{}",
+            "HTTP/1.1 200 OK\r\n\r\n",
+            include_str!("static/twitch_auth_local_website.html")
+        );
+        stream.write_all(res.as_bytes()).unwrap();
+        stream.flush().unwrap();
+
+        None
+    } else {
+        // there is some body passed, that means its the second request
+        // where the JS itself is sending the hash
+
+        let res = "HTTP/1.1 200 OK\r\n\r\n";
+        stream.write_all(res.as_bytes()).unwrap();
+        stream.flush().unwrap();
+
+        Some(
+            // parse out the token, which is passed as a whole bundle
+            // of url params for reasons
+            body.split('=')
+                .nth(1)
+                .unwrap()
+                .split('&')
+                .nth(0)
+                .unwrap()
+                .to_string(),
+        )
+    }
+}
+
+#[tauri::command]
+pub async fn authentificate(
+    conns: State<'_, Arc<TMutex<Connections<'_>>>>,
+    dataset: State<'_, Arc<TMutex<Dataset>>>,
+    config: State<'_, Arc<TMutex<Config>>>,
+    app_handle: tauri::AppHandle,
+    token: Option<String>,
+) -> Result<String, String> {
+    info!("authentificating");
+
+    let mut token = token.clone();
+    if let None = token {
+        info!("no token, starting the twitch auth process");
+
+        let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 32995))).unwrap();
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    if let Some(tok) = try_get_token(stream) {
+                        info!("got token from proxy");
+                        token = Some(tok);
+                        break;
+                    }
+                }
+                Err(e) => {
+                    tracing::error!("Error: {}", e);
+                    return Err(
+                        "Error: failed to initiate local receiver for Twitch auth service".into(),
+                    );
+                }
+            }
+        }
+    }
+
+    let token = token.unwrap();
+
+    // send the token to the client, so they can store it and recall
+    // upon application restart
+    app_handle.emit_all("token", token.clone()).unwrap();
+
+    info!("initing everything with credentials");
+    let mut conns = conns.inner().lock().await;
+    conns.with_token(token.clone()).await.unwrap();
+
+    let mut data = dataset.inner().lock().await;
+    let config = config.inner().lock().await;
+
+    if let Some(a) = &conns.authed {
+        (*data) = Dataset::from_config(&config, &a.helix_user_token, &a.helix)
+            .await
+            .unwrap();
+    }
+
+    Ok(token)
 }

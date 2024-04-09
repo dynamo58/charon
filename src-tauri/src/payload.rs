@@ -1,4 +1,5 @@
-use regex::Regex;
+use std::collections::HashMap;
+
 use tracing::warn;
 use twitch_irc::message::{PrivmsgMessage, ReplyToMessage, UserNoticeMessage};
 
@@ -22,40 +23,38 @@ impl PrivmsgPayload {
             None => DEFAULT_USER_COLOR.to_string(),
         };
 
-        let channel_badges = &dataset
-            .channel_data
-            .get(&privmsg.channel_login)
-            .unwrap()
-            .badges
-            .0;
-
         let mut sender_badges = vec![];
 
-        if let Some(&Some(ref badges_str)) = privmsg.source.tags.0.get("badges") {
-            if badges_str.len() > 0 {
-                for b in badges_str.split(',').collect::<Vec<&str>>() {
-                    let chunks = b.split('/').collect::<Vec<&str>>();
+        // TODO: ermmmmmmmmmmmm
+        if let Some(badge_data) = &dataset.channel_data.get(&privmsg.channel_login) {
+            let channel_badges = &badge_data.badges.0;
 
-                    let set_id = chunks[0];
-                    let badge_id = chunks[1];
+            if let Some(&Some(ref badges_str)) = privmsg.source.tags.0.get("badges") {
+                if badges_str.len() > 0 {
+                    for b in badges_str.split(',').collect::<Vec<&str>>() {
+                        let chunks = b.split('/').collect::<Vec<&str>>();
 
-                    if let Some(set) = channel_badges.get(set_id) {
-                        if let Some(badge) = set.get(badge_id) {
-                            sender_badges.push(badge.clone());
-                        } else {
-                            warn!(
-                                "Badge not found; channel: {}, set id: {}, badge id: {}",
-                                privmsg.channel_login, set_id, badge_id
-                            );
-                        }
-                    } else if let Some(set) = dataset.global_badges.0.get(set_id) {
-                        if let Some(badge) = set.get(badge_id) {
-                            sender_badges.push(badge.clone());
-                        } else {
-                            warn!(
-                                "Badge not found; channel: {}, set id: {}, badge id: {}",
-                                privmsg.channel_login, set_id, badge_id
-                            );
+                        let set_id = chunks[0];
+                        let badge_id = chunks[1];
+
+                        if let Some(set) = channel_badges.get(set_id) {
+                            if let Some(badge) = set.get(badge_id) {
+                                sender_badges.push(badge.clone());
+                            } else {
+                                warn!(
+                                    "Badge not found; channel: {}, set id: {}, badge id: {}",
+                                    privmsg.channel_login, set_id, badge_id
+                                );
+                            }
+                        } else if let Some(set) = dataset.global_badges.0.get(set_id) {
+                            if let Some(badge) = set.get(badge_id) {
+                                sender_badges.push(badge.clone());
+                            } else {
+                                warn!(
+                                    "Badge not found; channel: {}, set id: {}, badge id: {}",
+                                    privmsg.channel_login, set_id, badge_id
+                                );
+                            }
                         }
                     }
                 }
@@ -128,41 +127,50 @@ impl UsernoticePayload {
 }
 
 fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String {
-    let mut out = format!("{s}");
+    // TODO: fix this
+    let dummy = HashMap::new();
+    let third_party_emotes;
 
-    // links
-    let re = Regex::new(r"\b([^\s\d][^\s\d.]+?\.[^\s\d.]+[^\s\d])\b").unwrap();
-    out = re
-        .replace_all(&out, "<a target='_blank' href='$1'>$1</a>")
-        .to_string();
-
-    let third_party_emotes = &data
-        .channel_data
-        .get(privmsg.channel_login())
-        .unwrap()
-        .third_party_emotes;
-
-    // emotes -- native
-    for emote in &privmsg.emotes {
-        out = out.replace(
-            &emote.code,
-            &format!(
-                "<img class='emote' src='https://static-cdn.jtvnw.net/emoticons/v2/{}/default/dark/3.0' />",
-                emote.id
-            ),
-        );
+    if let Some(channel_data) = &data.channel_data.get(privmsg.channel_login()) {
+        third_party_emotes = &channel_data.third_party_emotes;
+    } else {
+        third_party_emotes = &dummy;
     }
 
-    let words = out.split(' ').collect::<Vec<&str>>();
     let mut out = String::new();
 
-    // emotes -- third party
-    for word in words {
+    for word in s.split(' ').collect::<Vec<&str>>() {
+        // decide if word is a link
+
+        //     for these purposes a word is a string iff it has a dot somewhere
+        //     in the middle and at least one of its sides is not purely numeric
+        if let Some(dot_pos) = word.chars().position(|c| c == '.') {
+            if dot_pos > 0
+                && dot_pos < word.len() - 1
+                && (word[0..dot_pos].parse::<isize>().is_err()
+                    || word[dot_pos..].parse::<isize>().is_err())
+            {
+                out.push_str(&format!("<a target='_blank' href='{word}'>{word}</a>"));
+                continue;
+            }
+        }
+
+        // decide if it is a native emote
+
+        if let Some(emote_idx) = privmsg.emotes.iter().position(|e| e.code == word) {
+            out.push_str(&format!(
+                "<img class='emote' src='https://static-cdn.jtvnw.net/emoticons/v2/{}/default/dark/3.0' />",
+                privmsg.emotes[emote_idx].id
+            ));
+            continue;
+        }
+
         if let Some(em) = third_party_emotes.get(word) {
             out.push_str(&format!("<img class='emote' src='{em}' />"));
-        } else {
-            out.push_str(&format!("{word} "));
+            continue;
         }
+
+        out.push_str(&format!("{word} "));
     }
 
     out

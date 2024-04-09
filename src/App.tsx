@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import { For } from "solid-js";
 import Chatroom from "./components/Chatroom";
@@ -6,6 +6,8 @@ import Chatroom from "./components/Chatroom";
 import Tab from "./components/Tab";
 import { useGlobalContext } from "./store";
 import { styled } from "solid-styled-components";
+import AuthModal from "./components/AuthModal";
+import { TWITCH_AUTH_URL } from "./constants";
 
 const AppDiv = styled.div`
   background-color: ${(props) => props.theme?.colors.bgMain};
@@ -20,23 +22,27 @@ const AppDiv = styled.div`
     text-decoration: none;
     font-weight: 600;
   }
-`;
 
-const TabDiv = styled.div``;
-
-const MessageDiv = styled.div`
-  & > input {
-    width: 100%;
+  & input {
+    width: 100vw;
     height: 3em;
     border: none;
     background-color: ${(props) => props.theme?.colors.bgMain};
     color: ${(props) => props.theme?.colors.fgMain};
+    padding: 0 0.5em;
+    overflow-wrap: break-word;
+    overflow: hidden;
+    display: block;
   }
 
-  & > input:focus {
+  & input:focus {
     outline: none;
   }
 `;
+
+const TabDiv = styled.div``;
+
+const MessageDiv = styled.div``;
 
 function App() {
   let topBarRef: HTMLDivElement;
@@ -57,8 +63,36 @@ function App() {
     if (!e.ctrlKey) messageInputRef.value = "";
   };
 
+  const [modalShowing, setModalShowing] = createSignal<boolean>(false);
+
+  onMount(async () => {
+    if (localStorage.getItem("token")) {
+      await invoke("authentificate", {
+        token: localStorage.getItem("token"),
+      });
+    } else {
+      setModalShowing(true);
+
+      let token = await invoke("authentificate", {
+        token: localStorage.getItem("token"),
+      });
+      localStorage.setItem("token", token as string);
+
+      setModalShowing(false);
+    }
+  });
+
   return (
     <AppDiv>
+      <AuthModal closeBtnText={""} showing={modalShowing()}>
+        <p style="line-height: 1.4em">
+          Click{" "}
+          <a target="_blank" style="margin: 0 0.2em;" href={TWITCH_AUTH_URL}>
+            here
+          </a>{" "}
+          to authentificate using your Twitch account.
+        </p>
+      </AuthModal>
       <TabDiv ref={topBarRef!}>
         <For each={tabs()}>
           {(item, idx) => (

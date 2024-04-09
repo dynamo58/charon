@@ -25,14 +25,3 @@ pub async fn fetch(channel_name: String) -> anyhow::Result<RecentMessagesRes> {
         .json::<RecentMessagesRes>()
         .await?)
 }
-
-pub async fn fetch_raw(channel_name: String) -> anyhow::Result<String> {
-    Ok(Client::new()
-        .get(&format!(
-            "https://recent-messages.robotty.de/api/v2/recent-messages/{channel_name}?limit={LIMIT_PULLED_MESSAGES}"
-        ))
-        .send()
-        .await?
-        .text()
-        .await?)
-}

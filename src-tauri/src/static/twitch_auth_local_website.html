@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <script>
+      window.authRes = null;
+
+      (async function main() {
+        const hash = window.location.hash;
+        // hide the token asap, just for extra safety measures
+        window.history.pushState(null, null, "xd");
+
+        if (hash === "") {
+          window.authRes =
+            "An unexpected error occured. Please try again later.";
+          return;
+        }
+
+        await fetch(`/`, {
+          method: "POST",
+          body: hash,
+        }).finally(() => {
+          window.authRes =
+            "Successfully authentificated with Twitch. You may close this page and return to Charon";
+        });
+      })();
+    </script>
+  </head>
+  <style>
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3em;
+      background-color: #252525;
+      color: #fff;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #status {
+      vertical-align: center;
+      display: inline-block;
+      font-size: 2em;
+      max-width: 30em;
+    }
+  </style>
+  <body>
+    <div id="status">... Evaluating ...</div>
+
+    <script>
+      const status_field = document.getElementById("status");
+      setInterval(() => {
+        if (window.authRes) status_field.textContent = window.authRes;
+      }, 100);
+    </script>
+  </body>
+</html>

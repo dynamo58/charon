@@ -1,5 +1,4 @@
 import {
-  Accessor,
   For,
   Match,
   Switch,
