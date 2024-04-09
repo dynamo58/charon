@@ -24,7 +24,7 @@ The program is named after Greek mythology whereby Charon is the name of a ferry
 
 - [x] Sending & recieving messages, channel tabs
 - [ ] Config framework & message highlighting
-- [ ] Authentification
+- [x] Authentification
 - [x] Native badges & emotes
 - [ ] FFZ, BTTV, 7tv emotes & badges
 - [ ] Voting
