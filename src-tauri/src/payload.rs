@@ -89,34 +89,34 @@ impl UsernoticePayload {
             None => DEFAULT_USER_COLOR.to_string(),
         };
 
-        let channel_badges = &dataset
-            .channel_data
-            .get(&usrnotice.channel_login)
-            .unwrap()
-            .badges
-            .0;
+        // let channel_badges = &dataset
+        //     .channel_data
+        //     .get(&usrnotice.channel_login)
+        //     .unwrap()
+        //     .badges
+        //     .0;
 
-        let mut sender_badges = vec![];
+        // let mut sender_badges = vec![];
 
-        if let Some(&Some(ref badges_str)) = usrnotice.source.tags.0.get("badges") {
-            if badges_str.len() > 0 {
-                for b in badges_str.split(',').collect::<Vec<&str>>() {
-                    let chunks = b.split('/').collect::<Vec<&str>>();
+        // if let Some(&Some(ref badges_str)) = usrnotice.source.tags.0.get("badges") {
+        //     if badges_str.len() > 0 {
+        //         for b in badges_str.split(',').collect::<Vec<&str>>() {
+        //             let chunks = b.split('/').collect::<Vec<&str>>();
 
-                    let set_id = chunks[0];
-                    let badge_id = chunks[1];
+        //             let set_id = chunks[0];
+        //             let badge_id = chunks[1];
 
-                    if let Some(set) = channel_badges.get(set_id) {
-                        sender_badges.push(set.get(badge_id).unwrap().clone());
-                    } else if let Some(set) = dataset.global_badges.0.get(set_id) {
-                        sender_badges.push(set.get(badge_id).unwrap().clone());
-                    }
-                }
-            }
-        }
+        //             if let Some(set) = channel_badges.get(set_id) {
+        //                 sender_badges.push(set.get(badge_id).unwrap().clone());
+        //             } else if let Some(set) = dataset.global_badges.0.get(set_id) {
+        //                 sender_badges.push(set.get(badge_id).unwrap().clone());
+        //             }
+        //         }
+        //     }
+        // }
 
         Self {
-            badges: sender_badges,
+            badges: vec![],
             sender_nick: usrnotice.sender.name,
             message: usrnotice.message_text.unwrap_or_default(),
             color,

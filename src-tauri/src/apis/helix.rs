@@ -145,21 +145,21 @@ pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<NativeBadgeSe
     Ok(badge_set)
 }
 
-pub async fn get_global_emotes(auth: &UserToken) -> anyhow::Result<GlobalEmotesRes> {
-    let res = Client::new()
-        .get("https://api.twitch.tv/helix/chat/emotes/global")
-        .header("Client-ID", auth.client_id().to_string())
-        .header(
-            "Authorization",
-            format!("Bearer {}", auth.access_token.secret()),
-        )
-        .send()
-        .await?
-        .json::<GlobalEmotesRes>()
-        .await?;
+// pub async fn get_global_emotes(auth: &UserToken) -> anyhow::Result<GlobalEmotesRes> {
+//     let res = Client::new()
+//         .get("https://api.twitch.tv/helix/chat/emotes/global")
+//         .header("Client-ID", auth.client_id().to_string())
+//         .header(
+//             "Authorization",
+//             format!("Bearer {}", auth.access_token.secret()),
+//         )
+//         .send()
+//         .await?
+//         .json::<GlobalEmotesRes>()
+//         .await?;
 
-    todo!()
-}
+//     todo!()
+// }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

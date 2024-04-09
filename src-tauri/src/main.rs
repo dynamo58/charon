@@ -59,8 +59,8 @@ async fn main() {
 
             Ok(())
         })
-        .manage(Arc::new(TMutex::new(config)))
         .manage(data)
+        .manage(Arc::new(TMutex::new(config)))
         .manage(Arc::new(TMutex::new(connections)))
         .invoke_handler(tauri::generate_handler![
             commands::send_message,

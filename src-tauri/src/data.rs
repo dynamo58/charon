@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
-use crate::apis::{
-    adamcy::get_all_3rd_party_channel_emotes,
-    helix::{get_channel_badges_from_id, get_global_badges},
+use crate::{
+    apis::{
+        adamcy::get_all_3rd_party_channel_emotes,
+        helix::{get_channel_badges_from_id, get_global_badges},
+    },
+    shared,
 };
 use twitch_api::{helix::channels::ChannelInformation, twitch_oauth2::UserToken, HelixClient};
 
@@ -55,10 +58,14 @@ impl Dataset {
         let info = helix_client
             .get_channel_from_login(&channel_name, auth)
             .await?
-            .context("oopsie")?;
-        let badges = get_channel_badges_from_id(info.broadcaster_id.to_string(), &auth).await?;
-        let third_party_emotes =
-            get_all_3rd_party_channel_emotes(info.broadcaster_login.as_str()).await?;
+            .context("oopsie")
+            .unwrap();
+        let badges = get_channel_badges_from_id(info.broadcaster_id.to_string(), &auth)
+            .await
+            .unwrap();
+        let third_party_emotes = get_all_3rd_party_channel_emotes(info.broadcaster_login.as_str())
+            .await
+            .unwrap();
 
         self.channel_data.insert(
             channel_name.clone(),

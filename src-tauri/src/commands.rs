@@ -45,7 +45,7 @@ pub async fn join_channel(
     conns: State<'_, Arc<TMutex<Connections<'_>>>>,
     dataset: State<'_, Arc<TMutex<Dataset>>>,
 ) -> Result<String, String> {
-    info!("joining #{}", &channel_name);
+    info!("joining #{channel_name}");
 
     let c = Arc::clone(&conns);
     let c = c.lock().await;
@@ -260,6 +260,10 @@ pub async fn authentificate(
         (*data) = Dataset::from_config(&config, &a.helix_user_token, &a.helix)
             .await
             .unwrap();
+
+        for c in &config.channels {
+            a.client.join(c.clone()).unwrap();
+        }
     }
 
     Ok(token)
