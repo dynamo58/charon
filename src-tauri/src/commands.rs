@@ -66,7 +66,7 @@ pub async fn join_channel(
 }
 
 #[tauri::command]
-/// will stream recent messages to the given channel (using external API)
+// will stream recent messages to the given channel (using external API)
 pub async fn get_recent_messages(
     channel_name: String,
     app_handle: tauri::AppHandle,

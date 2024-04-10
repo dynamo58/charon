@@ -3,3 +3,4 @@ dist
 .env
 templog.txt
 temp.json
+agenda.md

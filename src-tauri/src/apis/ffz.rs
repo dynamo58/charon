@@ -54,22 +54,22 @@ pub struct Room {
 #[serde(rename_all = "camelCase")]
 pub struct VipBadge {
     #[serde(rename = "1")]
-    pub n1: String,
+    pub n1: Option<String>,
     #[serde(rename = "2")]
-    pub n2: String,
+    pub n2: Option<String>,
     #[serde(rename = "4")]
-    pub n4: String,
+    pub n4: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModUrls {
     #[serde(rename = "1")]
-    pub n1: String,
+    pub n1: Option<String>,
     #[serde(rename = "2")]
-    pub n2: String,
+    pub n2: Option<String>,
     #[serde(rename = "4")]
-    pub n4: String,
+    pub n4: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

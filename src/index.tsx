@@ -5,6 +5,7 @@ import { ThemeProvider, DefaultTheme } from "solid-styled-components";
 import App from "./App";
 import { GlobalContextProvider } from "./store";
 import { createGlobalStyles } from "solid-styled-components";
+import { KeybindManager } from "./KeybindManager";
 
 import "solid-styled-components";
 declare module "solid-styled-components" {
@@ -97,16 +98,16 @@ const GlobalStyles = () => {
   return <Styles />;
 };
 
-import KeyboardManager from "./keyboard-manager";
 render(
   () => (
     <>
+      <GlobalStyles />
       <GlobalContextProvider>
-        <GlobalStyles />
-        <KeyboardManager />
-        <ThemeProvider theme={theme}>
-          <App />
-        </ThemeProvider>
+        <KeybindManager>
+          <ThemeProvider theme={theme}>
+            <App />
+          </ThemeProvider>
+        </KeybindManager>
       </GlobalContextProvider>
     </>
   ),

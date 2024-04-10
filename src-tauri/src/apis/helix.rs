@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 
+use anyhow::Context;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
@@ -61,7 +62,7 @@ pub async fn get_channel_badges_from_id(
         badge_set.0.insert(set_id, badges);
     }
 
-    let ffz_room = ffz::get_room(channel_id).await?;
+    let ffz_room = ffz::get_room(channel_id).await.context("buh")?;
 
     if let Some(mod_badge_url) = ffz_room.room.moderator_badge {
         let base_url = mod_badge_url
@@ -80,22 +81,23 @@ pub async fn get_channel_badges_from_id(
         badge_set.0.insert("moderator".into(), map);
     }
 
-    if let Some(vip_badges) = ffz_room.room.vip_badge {
-        let base_url = vip_badges
-            .n1
-            .get(..vip_badges.n1.len() - 1)
-            .unwrap()
-            .to_string();
+    if let Some(vip_badges) = &ffz_room.room.vip_badge {
+        if let Some(base_size_badge) = &vip_badges.n1 {
+            let base_url = base_size_badge
+                .get(..base_size_badge.len() - 1)
+                .unwrap()
+                .to_string();
 
-        let map = HashMap::from([(
-            "1".into(),
-            BadgeInfo {
-                title: "VIP".into(),
-                image_url_base: base_url,
-            },
-        )]);
+            let map = HashMap::from([(
+                "1".into(),
+                BadgeInfo {
+                    title: "VIP".into(),
+                    image_url_base: base_url,
+                },
+            )]);
 
-        badge_set.0.insert("vip".into(), map);
+            badge_set.0.insert("vip".into(), map);
+        }
     }
 
     Ok(badge_set)
@@ -144,22 +146,6 @@ pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<NativeBadgeSe
 
     Ok(badge_set)
 }
-
-// pub async fn get_global_emotes(auth: &UserToken) -> anyhow::Result<GlobalEmotesRes> {
-//     let res = Client::new()
-//         .get("https://api.twitch.tv/helix/chat/emotes/global")
-//         .header("Client-ID", auth.client_id().to_string())
-//         .header(
-//             "Authorization",
-//             format!("Bearer {}", auth.access_token.secret()),
-//         )
-//         .send()
-//         .await?
-//         .json::<GlobalEmotesRes>()
-//         .await?;
-
-//     todo!()
-// }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
