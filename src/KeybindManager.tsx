@@ -17,7 +17,10 @@ export class Keybind {
   }
 
   eval(evt: KeyboardEvent) {
-    if (this.activator(evt)) this.cb(evt);
+    if (this.activator(evt)) {
+      console.log(`[INFO][KBM]\t Running "${this.desc}"`);
+      this.cb(evt);
+    }
   }
 }
 
@@ -46,11 +49,6 @@ export function KeybindManager(props: any) {
     keybinds().forEach((kb) => {
       kb.eval(e);
     });
-
-    // // fallback to random chars activating the message input
-    // if (/[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-    //   // ...
-    // }
   });
 
   const registerKeybind = (kb: Keybind) => {

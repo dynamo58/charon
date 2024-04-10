@@ -8,6 +8,7 @@ import { useGlobalContext } from "./store";
 import { styled } from "solid-styled-components";
 import AuthModal from "./components/AuthModal";
 import { TWITCH_AUTH_URL } from "./constants";
+import { Keybind, useKeybindManager } from "./KeybindManager";
 
 const AppDiv = styled.div`
   background-color: ${(props) => props.theme?.colors.bgMain};
@@ -47,6 +48,8 @@ const MessageDiv = styled.div``;
 function App() {
   let topBarRef: HTMLDivElement;
   const { tabs, currTabIdx } = useGlobalContext();
+  const { registerKeybind } = useKeybindManager();
+
   let messageInputRef: HTMLInputElement;
   let [message, setMessage] = createSignal<string>("");
 
@@ -65,6 +68,8 @@ function App() {
 
   const [modalShowing, setModalShowing] = createSignal<boolean>(false);
 
+  let appDivRef: HTMLDivElement;
+
   onMount(async () => {
     if (localStorage.getItem("token")) {
       await invoke("authentificate", {
@@ -80,10 +85,21 @@ function App() {
 
       setModalShowing(false);
     }
+
+    // fallback to random chars activating the message input
+    registerKeybind(
+      new Keybind(
+        "focus chat on random keypresses",
+        (e) => /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey,
+        (_) => {
+          messageInputRef.focus();
+        }
+      )
+    );
   });
 
   return (
-    <AppDiv>
+    <AppDiv ref={appDivRef!}>
       <AuthModal closeBtnText={""} showing={modalShowing()}>
         <p style="line-height: 1.4em">
           Click{" "}
