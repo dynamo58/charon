@@ -48,7 +48,6 @@ impl Dataset {
         self.channel_data.remove(&channel_name);
     }
 
-    // TODO: call this + the remove one in commands on tab change!
     pub async fn add_channel(
         &mut self,
         auth: &UserToken,
