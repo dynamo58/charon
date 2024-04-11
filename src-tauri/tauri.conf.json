@@ -15,11 +15,15 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "close": true
       }
     },
     "windows": [
       {
         "title": "Charon v0.0.0",
+        "label": "main",
         "width": 300,
         "height": 800
       }

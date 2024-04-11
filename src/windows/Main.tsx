@@ -22,6 +22,7 @@ const MainDiv = styled.div`
     color: ${(props) => props.theme?.colors.accent2};
     text-decoration: none;
     font-weight: 600;
+    margin: 0 0.2em;
   }
 
   & input {
@@ -102,7 +103,7 @@ const Main = () => {
       <AuthModal closeBtnText={""} showing={modalShowing()}>
         <p style="line-height: 1.4em">
           Click{" "}
-          <a target="_blank" style="margin: 0 0.2em;" href={TWITCH_AUTH_URL}>
+          <a target="_blank" href={TWITCH_AUTH_URL}>
             here
           </a>{" "}
           to authentificate using your Twitch account.

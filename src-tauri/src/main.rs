@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Arc;
+use tauri::Manager;
 use tokio::sync::Mutex as TMutex;
 
 use tracing_subscriber;
@@ -74,6 +75,16 @@ async fn main() {
             commands::close_preferences_window,
         ])
         .plugin(tauri_plugin_window_state::Builder::default().build())
+        .on_window_event(|event| match event.event() {
+            tauri::WindowEvent::Destroyed => {
+                let window = event.window();
+                if window.label() == "main" {
+                    tracing::info!("The main window has been closed. Goodbye cruel world...");
+                    window.app_handle().exit(0);
+                }
+            }
+            _ => {}
+        })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Fatal error occured.");
 }
