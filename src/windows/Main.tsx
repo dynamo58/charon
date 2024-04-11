@@ -1,16 +1,16 @@
 import { createSignal, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import { For } from "solid-js";
-import Chatroom from "./components/Chatroom";
+import Chatroom from "../components/Chatroom";
 
-import Tab from "./components/Tab";
-import { useGlobalContext } from "./store";
+import Tab from "../components/Tab";
+import { useGlobalContext } from "../store";
 import { styled } from "solid-styled-components";
-import AuthModal from "./components/AuthModal";
-import { TWITCH_AUTH_URL } from "./constants";
-import { Keybind, useKeybindManager } from "./KeybindManager";
+import AuthModal from "../components/AuthModal";
+import { TWITCH_AUTH_URL } from "../constants";
+import { Keybind, useKeybindManager } from "../KeybindManager";
 
-const AppDiv = styled.div`
+const MainDiv = styled.div`
   background-color: ${(props) => props.theme?.colors.bgMain};
   color: ${(props) => props.theme?.colors.fgMain};
   height: 100vh;
@@ -42,10 +42,9 @@ const AppDiv = styled.div`
 `;
 
 const TabDiv = styled.div``;
-
 const MessageDiv = styled.div``;
 
-function App() {
+const Main = () => {
   let topBarRef: HTMLDivElement;
   const { tabs, currTabIdx } = useGlobalContext();
   const { registerKeybind } = useKeybindManager();
@@ -99,7 +98,7 @@ function App() {
   });
 
   return (
-    <AppDiv ref={appDivRef!}>
+    <MainDiv ref={appDivRef!}>
       <AuthModal closeBtnText={""} showing={modalShowing()}>
         <p style="line-height: 1.4em">
           Click{" "}
@@ -137,8 +136,8 @@ function App() {
           onkeyup={handleMessageSubmission}
         />
       </MessageDiv>
-    </AppDiv>
+    </MainDiv>
   );
-}
+};
 
-export default App;
+export default Main;

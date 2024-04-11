@@ -1,15 +1,18 @@
 /* @refresh reload */
-import { render } from "solid-js/web";
-
-import { ThemeProvider, DefaultTheme } from "solid-styled-components";
-import App from "./App";
-import { GlobalContextProvider } from "./store";
-import { createGlobalStyles } from "solid-styled-components";
-import { KeybindManager } from "./KeybindManager";
-
-import "solid-styled-components";
-import { Route, Router } from "@solidjs/router";
 import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Route, Router } from "@solidjs/router";
+
+import {
+  ThemeProvider,
+  DefaultTheme,
+  createGlobalStyles,
+} from "solid-styled-components";
+
+import { GlobalContextProvider } from "./store";
+import { KeybindManager } from "./KeybindManager";
+import Main from "./windows/Main";
+
 declare module "solid-styled-components" {
   export interface DefaultTheme {
     colors: {
@@ -100,7 +103,7 @@ const GlobalStyles = () => {
   return <Styles />;
 };
 
-const PreferencesWindow = lazy(() => import("./Preferences"));
+const PreferencesWindow = lazy(() => import("./windows/Preferences"));
 
 render(
   () => (
@@ -110,7 +113,7 @@ render(
         <KeybindManager>
           <ThemeProvider theme={theme}>
             <Router>
-              <Route path="/" component={App} />
+              <Route path="/" component={Main} />
               <Route path="/preferences" component={PreferencesWindow} />
             </Router>
           </ThemeProvider>
