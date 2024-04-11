@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api";
 import { useGlobalContext } from "./store";
 import { createContext, createSignal, useContext } from "solid-js";
 
@@ -40,6 +41,13 @@ export function KeybindManager(props: any) {
       (_) => {
         const new_tab_label = prompt("New chanel:");
         if (new_tab_label !== null) openTab(new_tab_label);
+      }
+    ),
+    new Keybind(
+      "Open preferences window",
+      (e) => e.ctrlKey && e.key === "p",
+      async (_) => {
+        console.log(await invoke("open_preferences_window"));
       }
     ),
   ]);

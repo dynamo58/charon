@@ -1,7 +1,7 @@
 use crate::data::Dataset;
 use crate::handle_received_message;
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex as TMutex;
 use twitch_irc::message::ServerMessage;
 
@@ -267,4 +267,31 @@ pub async fn authentificate(
     }
 
     Ok(token)
+}
+
+#[tauri::command]
+pub fn open_preferences_window(app_handle: AppHandle) -> Result<String, String> {
+    let res = tauri::WindowBuilder::new(
+        &app_handle,
+        "preferences",
+        tauri::WindowUrl::App("/preferences".into()),
+    )
+    .build();
+
+    match res {
+        Ok(_) => Ok("config window spawned successfully".into()),
+        Err(e) => {
+            tracing::error!("failed spawning config window | error: {e}");
+            Err("failed spawning config window".into())
+        }
+    }
+}
+
+#[tauri::command]
+pub fn close_preferences_window(app_handle: AppHandle) {
+    let cfg_window = app_handle.get_window("preferences");
+
+    if let Some(window) = cfg_window {
+        window.close().unwrap();
+    }
 }

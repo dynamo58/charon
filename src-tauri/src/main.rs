@@ -70,6 +70,8 @@ async fn main() {
             commands::fetch_config,
             commands::save_config,
             commands::authentificate,
+            commands::open_preferences_window,
+            commands::close_preferences_window,
         ])
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .run(tauri::generate_context!())

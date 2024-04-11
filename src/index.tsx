@@ -8,6 +8,8 @@ import { createGlobalStyles } from "solid-styled-components";
 import { KeybindManager } from "./KeybindManager";
 
 import "solid-styled-components";
+import { Route, Router } from "@solidjs/router";
+import { lazy } from "solid-js";
 declare module "solid-styled-components" {
   export interface DefaultTheme {
     colors: {
@@ -98,6 +100,8 @@ const GlobalStyles = () => {
   return <Styles />;
 };
 
+const PreferencesWindow = lazy(() => import("./Preferences"));
+
 render(
   () => (
     <>
@@ -105,7 +109,10 @@ render(
       <GlobalContextProvider>
         <KeybindManager>
           <ThemeProvider theme={theme}>
-            <App />
+            <Router>
+              <Route path="/" component={App} />
+              <Route path="/preferences" component={PreferencesWindow} />
+            </Router>
           </ThemeProvider>
         </KeybindManager>
       </GlobalContextProvider>
