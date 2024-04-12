@@ -1,26 +1,31 @@
-import { styled } from "solid-styled-components";
+import { css } from "solid-styled";
 import { IUsernoticePayload } from "../../types";
 import { For } from "solid-js";
 import Badge from "./Badge";
-
-const UsernoticeDiv = styled.div`
-  width: 100%;
-  background-color: #9514cc33;
-  & > * {
-    display: inline-block;
-    vertical-align: middle;
-  }
-`;
-
-const EventDiv = styled.div`
-  color: ${(props) => props.theme?.colors.fgAlt};
-  font-size: ${(props) => props.theme?.fontSizes.small};
-`;
+import { useGlobalContext } from "../../store";
 
 const Usernotice = (props: IUsernoticePayload) => {
+  const { theme } = useGlobalContext();
+
+  css`
+    div.usernotice {
+      width: 100%;
+      background-color: #9514cc33;
+      & > * {
+        display: inline-block;
+        vertical-align: middle;
+      }
+    }
+
+    div.event {
+      color: ${theme().colors.fgAlt};
+      font-size: ${theme().fontSizes.small};
+    }
+  `;
+
   return (
     <>
-      <UsernoticeDiv>
+      <div class="usernotice">
         <For each={props.badges}>{(item, _idx) => <Badge {...item} />}</For>
         <b
           style={{
@@ -31,10 +36,10 @@ const Usernotice = (props: IUsernoticePayload) => {
         </b>
         <span>{props.message}</span>
         <br />
-        <EventDiv>
+        <div class="event">
           ({props.event_name}) {props.system_message}
-        </EventDiv>
-      </UsernoticeDiv>
+        </div>
+      </div>
     </>
   );
 };

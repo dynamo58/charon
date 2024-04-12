@@ -1,3 +1,5 @@
+export const STATIC_FONTS = ["Arial"]
+
 export const MAX_LINE_COUNT_PER_CHAT = 100;
 
 const SCOPES = [

@@ -15,11 +15,17 @@ use tracing::info;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
     pub channels: Vec<String>,
+    pub font_ui: String,
+    pub font_chat: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Self { channels: vec![] }
+        Self {
+            channels: vec![],
+            font_ui: String::from("Arial"),
+            font_chat: String::from("Arial"),
+        }
     }
 }
 

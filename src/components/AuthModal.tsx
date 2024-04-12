@@ -1,13 +1,6 @@
 import { JSX, createEffect } from "solid-js";
-import { styled } from "solid-styled-components";
-
-const ModalDialog = styled.dialog`
-  color: ${(props) => props.theme?.colors.fgMain};
-  background-color: ${(props) => props.theme?.colors.bgTern};
-  border: 2px solid ${(props) => props.theme?.colors.fgMain};
-  border-radius: 1em;
-  padding: 1em;
-`;
+import { css } from "solid-styled";
+import { useGlobalContext } from "../store";
 
 interface IModalProps {
   children: JSX.Element;
@@ -16,6 +9,8 @@ interface IModalProps {
 }
 
 const AuthModal = (props: IModalProps) => {
+  const { theme } = useGlobalContext();
+
   let d: HTMLDialogElement;
 
   createEffect(() => {
@@ -23,9 +18,19 @@ const AuthModal = (props: IModalProps) => {
     else d.close();
   });
 
+  css`
+    #authModalDialog {
+      color: ${theme().colors.fgMain};
+      background-color: ${theme().colors.bgTern};
+      border: 2px solid ${theme().colors.fgMain};
+      border-radius: 1em;
+      padding: 1em;
+    }
+  `;
+
   return (
     <>
-      <ModalDialog id="favDialog" ref={d!}>
+      <dialog id="authModalDialog" ref={d!}>
         <form method="dialog">
           {props.children}
           <br />
@@ -35,7 +40,7 @@ const AuthModal = (props: IModalProps) => {
             shouldn't take more than a couple of seconds.
           </p>
         </form>
-      </ModalDialog>
+      </dialog>
     </>
   );
 };

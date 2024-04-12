@@ -8,27 +8,12 @@ import {
 } from "solid-js";
 import { IPrivmgPayload, IUsernoticePayload, PayloadKind } from "../types";
 import { listen } from "@tauri-apps/api/event";
-import { styled } from "solid-styled-components";
+import { css } from "solid-styled";
 import { MAX_LINE_COUNT_PER_CHAT } from "../constants";
 import Privmsg from "./messages/Privmsg";
 import Usernotice from "./messages/Usernotice";
 import { invoke } from "@tauri-apps/api";
-
-const ChatroomDiv = styled.span<{ isActive: boolean }>`
-  width: calc(100vw -10px);
-  padding-left: 0.3em;
-  padding-right: 0.3em;
-  display: ${(props) => (props.isActive ? "block" : "none")};
-  background-color: ${(props) => props.theme?.colors.bgSec};
-  & .emote {
-    height: 2em !important;
-    display: inline-block;
-  }
-  overflow-y: overlay;
-  background-color: ${(props) => props.theme?.colors.bgSec};
-  flex-grow: 1;
-  overflow-wrap: break-word;
-`;
+import { useGlobalContext } from "../store";
 
 interface IChatroomProps {
   isActive: boolean;
@@ -41,6 +26,8 @@ interface IMessageWrapper {
 }
 
 const Chatroom = (props: IChatroomProps) => {
+  const { theme } = useGlobalContext();
+
   let divRef: HTMLDivElement;
   let [messages, setMessages] = createSignal<IMessageWrapper[]>([]);
   let lineCount = 0;
@@ -81,9 +68,28 @@ const Chatroom = (props: IChatroomProps) => {
     });
   });
 
+  css`
+    .chatroom {
+      width: calc(100vw -10px);
+      padding-left: 0.3em;
+      padding-right: 0.3em;
+      display: ${props.isActive ? "block" : "none"};
+      background-color: ${theme().colors.bgSec};
+      overflow-y: overlay;
+      background-color: ${theme().colors.bgSec};
+      flex-grow: 1;
+      overflow-wrap: break-word;
+    }
+
+    .chatroom .emote {
+      height: 2em !important;
+      display: inline-block;
+    }
+  `;
+
   return (
     <>
-      <ChatroomDiv isActive={props.isActive} ref={divRef!}>
+      <div class="chatroom" ref={divRef!}>
         <For each={messages()}>
           {(item, _) => {
             return (
@@ -100,7 +106,7 @@ const Chatroom = (props: IChatroomProps) => {
             );
           }}
         </For>
-      </ChatroomDiv>
+      </div>
     </>
   );
 };

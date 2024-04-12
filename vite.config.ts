@@ -1,9 +1,19 @@
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
+import solidStyled from 'unplugin-solid-styled';
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [solid()],
+  plugins: [
+    solid(),
+    solidStyled.vite({
+      prefix: 'ss_',
+      filter: {
+        include: 'src/**/*.tsx',
+        exclude: 'node_modules/**/*.{ts,js}',
+      },
+    }),
+  ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

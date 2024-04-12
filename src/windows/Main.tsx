@@ -5,52 +5,19 @@ import Chatroom from "../components/Chatroom";
 
 import Tab from "../components/Tab";
 import { useGlobalContext } from "../store";
-import { styled } from "solid-styled-components";
 import AuthModal from "../components/AuthModal";
 import { TWITCH_AUTH_URL } from "../constants";
 import { Keybind, useKeybindManager } from "../KeybindManager";
-
-const MainDiv = styled.div`
-  background-color: ${(props) => props.theme?.colors.bgMain};
-  color: ${(props) => props.theme?.colors.fgMain};
-  height: 100vh;
-  max-height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  & a {
-    color: ${(props) => props.theme?.colors.accent2};
-    text-decoration: none;
-    font-weight: 600;
-    margin: 0 0.2em;
-  }
-
-  & input {
-    width: 100vw;
-    height: 3em;
-    border: none;
-    background-color: ${(props) => props.theme?.colors.bgMain};
-    color: ${(props) => props.theme?.colors.fgMain};
-    padding: 0 0.5em;
-    overflow-wrap: break-word;
-    overflow: hidden;
-    display: block;
-  }
-
-  & input:focus {
-    outline: none;
-  }
-`;
-
-const TabDiv = styled.div``;
-const MessageDiv = styled.div``;
+import { css } from "solid-styled";
 
 const Main = () => {
-  let topBarRef: HTMLDivElement;
+  const { theme } = useGlobalContext();
   const { tabs, currTabIdx } = useGlobalContext();
   const { registerKeybind } = useKeybindManager();
 
+  let topBarRef: HTMLDivElement;
   let messageInputRef: HTMLInputElement;
+
   let [message, setMessage] = createSignal<string>("");
 
   const handleMessageSubmission = async (e: KeyboardEvent) => {
@@ -98,8 +65,43 @@ const Main = () => {
     );
   });
 
+  css`
+    #main {
+      background-color: ${theme().colors.bgMain};
+      font-family: ${theme().fonts.ui};
+      color: ${theme().colors.fgMain};
+      height: 100vh;
+      max-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      & a {
+        color: ${theme().colors.accent2};
+        text-decoration: none;
+        font-weight: 600;
+        margin: 0 0.2em;
+      }
+
+      & input {
+        width: 100vw;
+        height: 3em;
+        border: none;
+        background-color: ${theme().colors.bgMain};
+        color: ${theme().colors.fgMain};
+        padding: 0 0.5em;
+        overflow-wrap: break-word;
+        overflow: hidden;
+        display: block;
+      }
+
+      & input:focus {
+        outline: none;
+      }
+    }
+  `;
+
   return (
-    <MainDiv ref={appDivRef!}>
+    <div id="main" ref={appDivRef!}>
       <AuthModal closeBtnText={""} showing={modalShowing()}>
         <p style="line-height: 1.4em">
           Click{" "}
@@ -109,7 +111,7 @@ const Main = () => {
           to authentificate using your Twitch account.
         </p>
       </AuthModal>
-      <TabDiv ref={topBarRef!}>
+      <div id="tabs" ref={topBarRef!}>
         <For each={tabs()}>
           {(item, idx) => (
             <Tab
@@ -120,7 +122,7 @@ const Main = () => {
             ></Tab>
           )}
         </For>
-      </TabDiv>
+      </div>
       <For each={tabs()}>
         {(item, idx) => (
           <Chatroom
@@ -129,15 +131,15 @@ const Main = () => {
           ></Chatroom>
         )}
       </For>
-      <MessageDiv>
+      <div id="message">
         <input
           type="text"
           ref={messageInputRef!}
           onChange={(val) => setMessage((_) => val.target.value)}
           onkeyup={handleMessageSubmission}
         />
-      </MessageDiv>
-    </MainDiv>
+      </div>
+    </div>
   );
 };
 

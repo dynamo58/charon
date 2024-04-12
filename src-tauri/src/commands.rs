@@ -1,5 +1,6 @@
 use crate::data::Dataset;
 use crate::handle_received_message;
+use std::collections::HashSet;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex as TMutex;
@@ -271,6 +272,8 @@ pub async fn authentificate(
 
 #[tauri::command]
 pub fn open_preferences_window(app_handle: AppHandle) -> Result<String, String> {
+    info!("opening preferences window");
+
     let res = tauri::WindowBuilder::new(
         &app_handle,
         "preferences",
@@ -289,9 +292,45 @@ pub fn open_preferences_window(app_handle: AppHandle) -> Result<String, String> 
 
 #[tauri::command]
 pub fn close_preferences_window(app_handle: AppHandle) {
+    info!("closing preferences windows");
+
     let cfg_window = app_handle.get_window("preferences");
 
     if let Some(window) = cfg_window {
         window.close().unwrap();
     }
+}
+
+#[tauri::command]
+pub fn get_system_fonts() -> Result<String, String> {
+    info!("querying system fonts");
+
+    let mut db = fontdb::Database::new();
+    db.load_system_fonts();
+
+    let mut families = db
+        .faces()
+        .map(|f| f.families[0].0.clone())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<String>>();
+    families.sort();
+
+    Ok(serde_json::to_string(&families).unwrap())
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct Preferences {
+    font: String,
+}
+
+#[tauri::command]
+pub fn relay_preferences(prefs: String, app_handle: AppHandle) {
+    info!("relaying prefs to main window");
+
+    app_handle
+        .get_window("main")
+        .unwrap()
+        .emit("relay_prefs", prefs)
+        .unwrap();
 }
