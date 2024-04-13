@@ -150,7 +150,9 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
                 && (word[0..dot_pos].parse::<isize>().is_err()
                     || word[dot_pos..].parse::<isize>().is_err())
             {
-                out.push_str(&format!("<a target='_blank' href='{word}'>{word}</a>"));
+                out.push_str(&format!(
+                    "<a class='inline-link' target='_blank' href='{word}'>{word}</a>"
+                ));
                 continue;
             }
         }

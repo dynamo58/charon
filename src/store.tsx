@@ -10,6 +10,7 @@ import {
 import { Config, IPreferences } from "./types";
 import { Theme } from "./types";
 import { listen } from "@tauri-apps/api/event";
+import { WebviewWindow } from "@tauri-apps/api/window";
 
 interface ContextProps {
   tabs: Accessor<string[]>;
@@ -56,6 +57,7 @@ export function GlobalContextProvider(props: any) {
     fonts: {
       chat: "Arial",
       ui: "Arial",
+      scale: 1.0,
     },
   });
 
@@ -85,6 +87,8 @@ export function GlobalContextProvider(props: any) {
       channels: tabs(),
       font_ui: theme().fonts.ui,
       font_chat: theme().fonts.chat,
+      font_scale: theme().fonts.scale,
+      backdrop_image: null,
     };
   };
 
@@ -105,24 +109,39 @@ export function GlobalContextProvider(props: any) {
         fonts: {
           ui: res.font_ui,
           chat: res.font_chat,
+          scale: res.font_scale,
         },
       };
     });
 
-    listen("relay_prefs", async (e) => {
-      const prefs = JSON.parse(e.payload as string) as IPreferences;
+    listen("request_prefs", async () => {
+      console.log(`recd preferences window request`);
+      const prefs_window = WebviewWindow.getByLabel("preferences")!;
+      console.log({ prefs_window });
 
-      console.log({ prefs });
+      prefs_window.emit("prefs_for_prefs", {
+        font: theme().fonts.ui,
+        fontScale: theme().fonts.scale,
+        backdropImage: null, // TODO: backdrop
+      });
+    });
+
+    listen("prefs_for_main", async (e) => {
+      console.log(`got prefs from preferences window`);
+      const prefs = JSON.parse(e.payload as string) as IPreferences;
 
       setTheme((t) => {
         return {
           ...t,
           fonts: {
             ...t.fonts,
+            scale: prefs.fontScale,
             ui: prefs.font,
           },
         };
       });
+
+      window.dispatchEvent(new Event("scrollChat"));
 
       console.log(
         await invoke("save_config", {

@@ -39,14 +39,6 @@ const GlobalStyles = () => {
         overflow: hidden;
       }
 
-      /*
-        this has to be here due to the whole msg injection thing
-      */
-      .emote {
-        height: 2em !important;
-        display: inline-block;
-      }
-
       ::-webkit-scrollbar {
         width: 10px;
         height: 10px;

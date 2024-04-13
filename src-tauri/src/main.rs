@@ -74,7 +74,6 @@ async fn main() {
             commands::open_preferences_window,
             commands::close_preferences_window,
             commands::get_system_fonts,
-            commands::relay_preferences,
         ])
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .on_window_event(|event| match event.event() {

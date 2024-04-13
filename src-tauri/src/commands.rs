@@ -323,14 +323,3 @@ pub fn get_system_fonts() -> Result<String, String> {
 pub struct Preferences {
     font: String,
 }
-
-#[tauri::command]
-pub fn relay_preferences(prefs: String, app_handle: AppHandle) {
-    info!("relaying prefs to main window");
-
-    app_handle
-        .get_window("main")
-        .unwrap()
-        .emit("relay_prefs", prefs)
-        .unwrap();
-}

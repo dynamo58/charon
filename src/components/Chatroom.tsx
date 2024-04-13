@@ -66,6 +66,10 @@ const Chatroom = (props: IChatroomProps) => {
     await invoke("get_recent_messages", {
       channelName: props.channelName,
     });
+
+    window.addEventListener("scrollChat", () => {
+      divRef.scrollTop = divRef.scrollHeight;
+    });
   });
 
   css`
@@ -79,6 +83,7 @@ const Chatroom = (props: IChatroomProps) => {
       background-color: ${theme().colors.bgSec};
       flex-grow: 1;
       overflow-wrap: break-word;
+      overflow-x: hidden;
     }
 
     .chatroom .emote {

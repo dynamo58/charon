@@ -8,22 +8,53 @@ import {
   onMount,
 } from "solid-js";
 import { getTauriVersion, getVersion } from "@tauri-apps/api/app";
-import { appWindow } from "@tauri-apps/api/window";
+import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import { useGlobalContext } from "../store";
 import { IPreferences } from "../types";
 import { STATIC_FONTS } from "../constants";
+import { listen } from "@tauri-apps/api/event";
 
 function Preferences() {
   const { setTheme, theme } = useGlobalContext();
+  const main_window = WebviewWindow.getByLabel("main")!;
 
   // ====================================================
   // All the different sections of the preferences window
 
   let aboutSection: HTMLHeadingElement;
-
   let appearanceSection: HTMLHeadingElement;
+
+  // ====================================================
+
   let [fonts, setFonts] = createSignal<string[]>([]);
+  let [fontScale, setFontScale] = createSignal(1.0);
+
+  // ====================================================
+
+  const gatherPrefs = (): IPreferences => {
+    return {
+      font: theme().fonts.ui,
+      fontScale: fontScale(),
+      backdropImage: null,
+    };
+  };
+
+  const applyPrefs = (prefs: IPreferences) => {
+    setTheme((t) => {
+      return {
+        ...t,
+        fonts: {
+          ...t.fonts,
+          ui: prefs.font,
+          chat: prefs.font,
+        },
+      };
+    });
+
+    setFontScale(prefs.fontScale);
+    // TODO: set backdrop
+  };
 
   // ====================================================
 
@@ -31,24 +62,41 @@ function Preferences() {
     let res = (await invoke("get_system_fonts")) as string;
     let ffs = JSON.parse(res) as string[];
     setFonts([...ffs, ...STATIC_FONTS]);
+
+    console.log(`requesting prefs from main ${WebviewWindow.name}`);
+    await main_window.emit("request_prefs");
   });
+
+  listen("prefs_for_prefs", (e) => {
+    console.log(`received prefs from main`);
+    const prefs = e.payload as IPreferences;
+    console.log(prefs);
+    applyPrefs(prefs);
+  });
+
+  // ====================================================
 
   const handleFontChange = async (s: string) => {
     setTheme((t) => {
       return {
         ...t,
         fonts: {
+          ...t.fonts,
           ui: s,
           chat: s,
         },
       };
     });
 
-    await invoke("relay_preferences", {
-      prefs: JSON.stringify({
-        font: s,
-      } as IPreferences),
-    });
+    await main_window.emit("prefs_for_main", JSON.stringify(gatherPrefs()));
+  };
+
+  // ====================================================
+
+  const handleFontScaleChange = async (s: string) => {
+    const newScale = parseFloat(s);
+    setFontScale(newScale);
+    await main_window.emit("prefs_for_main", JSON.stringify(gatherPrefs()));
   };
 
   // ====================================================
@@ -59,6 +107,8 @@ function Preferences() {
       tauriVersion: await getTauriVersion(),
     };
   });
+
+  // ====================================================
 
   css`
     p.clickable {
@@ -112,6 +162,12 @@ function Preferences() {
         margin: 0 0.2em;
       }
     }
+
+    input,
+    select {
+      max-width: 10em;
+      height: 2em;
+    }
   `;
 
   return (
@@ -144,6 +200,16 @@ function Preferences() {
               )}
             </For>
           </select>
+
+          <br />
+
+          <label for="fontScale">Font scaling: </label>
+          <input
+            type="number"
+            name="fontScale"
+            value={fontScale()}
+            onChange={(e) => handleFontScaleChange(e.target.value)}
+          />
 
           <hr />
 

@@ -21,13 +21,12 @@ The name comes from Greek mythology, where Charon is the name of a ferryman brin
 # Roadmap
 
 - [x] Sending & recieving messages, channel tabs
-- [ ] Config framework & message highlighting
+- [x] Config framework
 - [x] Authentification
 - [x] Native badges & emotes
+- [ ] More customizations
 - [ ] FFZ, BTTV, 7tv emotes & badges
-- [ ] Voting
-- [ ] Predictions
-- [ ] Channel points
+- [ ] Twitch event API
 
 # Feedback / bug reports
 

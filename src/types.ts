@@ -1,7 +1,24 @@
+enum BackdropImagePlacement {
+  Top,
+  Bottom,
+  Left,
+  Right,
+  Center,
+  Tile,
+  Stretch,
+}
+
+export interface BackdropImage {
+  file: string,
+  placement: BackdropImagePlacement
+}
+
 export interface Config {
   channels: string[],
   font_ui: string,
   font_chat: string,
+  font_scale: number,
+  backdrop_image: BackdropImage | null,
 }
 
 export enum PayloadKind {
@@ -33,8 +50,9 @@ export interface IUsernoticePayload {
 
 export interface IPreferences {
   font: string,
+  fontScale: number,
+  backdropImage: BackdropImage | null,
 }
-
 
 export interface Theme {
   colors: {
@@ -58,5 +76,6 @@ export interface Theme {
   fonts: {
     chat: string;
     ui: string;
+    scale: number
   };
 }
