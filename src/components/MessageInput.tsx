@@ -11,7 +11,7 @@ const MessageInput = () => {
 
   let messageInputRef: HTMLInputElement;
 
-  let [message, setMessage] = createSignal<string>("");
+  let [message, setMessage] = createSignal<string>("ahoj");
 
   const handleMessageSubmission = async (e: KeyboardEvent) => {
     if (e.key !== "Enter" || message() === "") return;
@@ -48,22 +48,43 @@ const MessageInput = () => {
       overflow-wrap: break-word;
       overflow: hidden;
       display: block;
+      padding-right: 4em;
     }
 
     input:focus {
       outline: none;
     }
+
+    .message-len {
+      position: absolute;
+      right: 1em;
+      bottom: 0.5em;
+      user-select: none;
+    }
+
+    #message {
+      display: block;
+    }
+
+    .message-len {
+      color: ${message().length > 500 ? "red" : `${theme().colors.fgAlt}88`};
+    }
   `;
 
   return (
-    <div id="message">
-      <input
-        type="text"
-        ref={messageInputRef!}
-        onChange={(val) => setMessage((_) => val.target.value)}
-        onkeyup={handleMessageSubmission}
-      />
-    </div>
+    <>
+      <div id="message">
+        <input
+          type="text"
+          ref={messageInputRef!}
+          value={message()}
+          oninput={(el) => setMessage(el.target.value)}
+          onkeyup={handleMessageSubmission}
+          placeholder="Send a message..."
+        />
+        <div class="message-len">{message().length}</div>
+      </div>
+    </>
   );
 };
 
