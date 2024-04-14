@@ -61,7 +61,7 @@ function Preferences() {
   onMount(async () => {
     let res = (await invoke("get_system_fonts")) as string;
     let ffs = JSON.parse(res) as string[];
-    setFonts([...ffs, ...STATIC_FONTS]);
+    setFonts([...STATIC_FONTS, ...ffs]);
 
     console.log(`requesting prefs from main ${WebviewWindow.name}`);
     await main_window.emit("request_prefs");

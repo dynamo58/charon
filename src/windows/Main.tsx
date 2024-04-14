@@ -6,36 +6,17 @@ import Chatroom from "../components/Chatroom";
 import Tab from "../components/Tab";
 import { useGlobalContext } from "../store";
 import AuthModal from "../components/AuthModal";
-import { TWITCH_AUTH_URL } from "../constants";
-import { Keybind, useKeybindManager } from "../KeybindManager";
 import { css } from "solid-styled";
+import MessageInput from "../components/MessageInput";
 
 const Main = () => {
   const { theme } = useGlobalContext();
   const { tabs, currTabIdx } = useGlobalContext();
-  const { registerKeybind } = useKeybindManager();
 
   let topBarRef: HTMLDivElement;
-  let messageInputRef: HTMLInputElement;
-
-  let [message, setMessage] = createSignal<string>("");
-
-  const handleMessageSubmission = async (e: KeyboardEvent) => {
-    if (e.key !== "Enter" || message() === "") return;
-
-    console.log(
-      await invoke("send_message", {
-        message: message(),
-        channelName: tabs()[currTabIdx()],
-      })
-    );
-
-    if (!e.ctrlKey) messageInputRef.value = "";
-  };
+  let appDivRef: HTMLDivElement;
 
   const [modalShowing, setModalShowing] = createSignal<boolean>(false);
-
-  let appDivRef: HTMLDivElement;
 
   onMount(async () => {
     if (localStorage.getItem("token")) {
@@ -52,17 +33,6 @@ const Main = () => {
 
       setModalShowing(false);
     }
-
-    // fallback to random chars activating the message input
-    registerKeybind(
-      new Keybind(
-        "focus chat on random keypresses",
-        (e) => /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey,
-        (_) => {
-          messageInputRef.focus();
-        }
-      )
-    );
   });
 
   css`
@@ -81,36 +51,12 @@ const Main = () => {
         font-weight: 600;
         margin: 0 0.2em;
       }
-
-      & input {
-        width: 100vw;
-        height: 3em;
-        border: none;
-        background-color: ${theme().colors.bgMain};
-        color: ${theme().colors.fgMain};
-        padding: 0 0.5em;
-        overflow-wrap: break-word;
-        overflow: hidden;
-        display: block;
-      }
-
-      & input:focus {
-        outline: none;
-      }
     }
   `;
 
   return (
     <div id="main" ref={appDivRef!}>
-      <AuthModal closeBtnText={""} showing={modalShowing()}>
-        <p style="line-height: 1.4em">
-          Click{" "}
-          <a target="_blank" href={TWITCH_AUTH_URL}>
-            here
-          </a>{" "}
-          to authentificate using your Twitch account.
-        </p>
-      </AuthModal>
+      <AuthModal showing={modalShowing()} />
       <div id="tabs" ref={topBarRef!}>
         <For each={tabs()}>
           {(item, idx) => (
@@ -131,14 +77,7 @@ const Main = () => {
           ></Chatroom>
         )}
       </For>
-      <div id="message">
-        <input
-          type="text"
-          ref={messageInputRef!}
-          onChange={(val) => setMessage((_) => val.target.value)}
-          onkeyup={handleMessageSubmission}
-        />
-      </div>
+      <MessageInput />
     </div>
   );
 };
