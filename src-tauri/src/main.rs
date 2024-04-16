@@ -13,6 +13,7 @@ use std::env;
 
 mod apis;
 mod badge;
+mod color;
 mod commands;
 mod config;
 mod data;

@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use tracing::warn;
 use twitch_irc::message::{PrivmsgMessage, ReplyToMessage, UserNoticeMessage};
 
-const DEFAULT_USER_COLOR: &'static str = "#575757";
-
 use crate::{badge::BadgeInfo, data::Dataset};
+
+use crate::color::get_color_from_opt;
 
 #[derive(Clone, serde::Serialize)]
 pub struct PrivmsgPayload {
@@ -18,11 +18,6 @@ pub struct PrivmsgPayload {
 
 impl PrivmsgPayload {
     pub fn from_privmsg(privmsg: PrivmsgMessage, dataset: &Dataset) -> PrivmsgPayload {
-        let color = match privmsg.name_color {
-            Some(c) => c.to_string(),
-            None => DEFAULT_USER_COLOR.to_string(),
-        };
-
         let mut sender_badges = vec![];
 
         // TODO: ermmmmmmmmmmmm
@@ -64,7 +59,7 @@ impl PrivmsgPayload {
         PrivmsgPayload {
             sender_nick: privmsg.sender.name.clone(),
             message: inject_message(privmsg.message_text.clone(), &privmsg, dataset),
-            color,
+            color: get_color_from_opt(privmsg.name_color),
             badges: sender_badges,
             is_first_message: privmsg.source.tags.0.get("first-msg")
                 == Some(&Some("1".to_string())),
@@ -83,12 +78,7 @@ pub struct UsernoticePayload {
 }
 
 impl UsernoticePayload {
-    pub fn from_usernotice(usrnotice: UserNoticeMessage, dataset: &Dataset) -> Self {
-        let color = match usrnotice.name_color {
-            Some(c) => c.to_string(),
-            None => DEFAULT_USER_COLOR.to_string(),
-        };
-
+    pub fn from_usernotice(usrnotice: UserNoticeMessage, _dataset: &Dataset) -> Self {
         // let channel_badges = &dataset
         //     .channel_data
         //     .get(&usrnotice.channel_login)
@@ -119,7 +109,7 @@ impl UsernoticePayload {
             badges: vec![],
             sender_nick: usrnotice.sender.name,
             message: usrnotice.message_text.unwrap_or_default(),
-            color,
+            color: get_color_from_opt(usrnotice.name_color),
             system_message: usrnotice.system_message,
             event_name: usrnotice.event_id,
         }
