@@ -1,16 +1,7 @@
-enum BackdropImagePlacement {
-  Top,
-  Bottom,
-  Left,
-  Right,
-  Center,
-  Tile,
-  Stretch,
-}
-
-export interface BackdropImage {
-  file: string,
-  placement: BackdropImagePlacement
+export interface Backdrop {
+  // `property` contains the `background: ...`
+  // property that the backdrop is supposed to have
+  property: string,
 }
 
 export interface Config {
@@ -18,7 +9,7 @@ export interface Config {
   font_ui: string,
   font_chat: string,
   font_scale: number,
-  backdrop_image: BackdropImage | null,
+  backdrop: Backdrop,
 }
 
 export enum PayloadKind {
@@ -51,7 +42,7 @@ export interface IUsernoticePayload {
 export interface IPreferences {
   font: string,
   fontScale: number,
-  backdropImage: BackdropImage | null,
+  backdrop: Backdrop,
 }
 
 export interface Theme {
@@ -78,4 +69,6 @@ export interface Theme {
     ui: string;
     scale: number
   };
+
+  backdrop: Backdrop,
 }

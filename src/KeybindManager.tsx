@@ -47,7 +47,9 @@ export function KeybindManager(props: any) {
       "Open preferences window",
       (e) => e.ctrlKey && e.key === "p",
       async (_) => {
-        console.log(await invoke("open_preferences_window"));
+        if (await invoke("open_preferences_window")) {
+          console.log(`[INFO][KBM] Spawned preferences window`);
+        }
       }
     ),
   ]);

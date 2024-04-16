@@ -11,7 +11,7 @@ const MessageInput = () => {
 
   let messageInputRef: HTMLInputElement;
 
-  let [message, setMessage] = createSignal<string>("ahoj");
+  let [message, setMessage] = createSignal<string>("");
 
   const handleMessageSubmission = async (e: KeyboardEvent) => {
     if (e.key !== "Enter" || message() === "") return;
@@ -68,6 +68,7 @@ const MessageInput = () => {
 
     .message-len {
       color: ${message().length > 500 ? "red" : `${theme().colors.fgAlt}88`};
+      display: ${message().length === 0 ? "none" : "block"};
     }
   `;
 

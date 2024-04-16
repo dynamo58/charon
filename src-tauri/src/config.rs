@@ -13,20 +13,8 @@ use anyhow::{self, Context};
 use tracing::info;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum BackdropImagePlacement {
-    Top,
-    Bottom,
-    Left,
-    Right,
-    Center,
-    Tile,
-    Stretch,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct BackdropImage {
-    file: String,
-    placement: BackdropImagePlacement,
+pub struct Backdrop {
+    property: String,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -35,7 +23,7 @@ pub struct Config {
     pub font_ui: String,
     pub font_chat: String,
     pub font_scale: f32,
-    pub backdrop_image: Option<BackdropImage>,
+    pub backdrop: Backdrop,
 }
 
 impl Default for Config {
@@ -45,7 +33,9 @@ impl Default for Config {
             font_ui: String::from("Arial"),
             font_chat: String::from("Arial"),
             font_scale: 1f32,
-            backdrop_image: None,
+            backdrop: Backdrop {
+                property: String::from("none"),
+            },
         }
     }
 }

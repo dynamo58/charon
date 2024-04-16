@@ -74,18 +74,19 @@ const Chatroom = (props: IChatroomProps) => {
 
   css`
     .chatroom {
-      width: calc(100vw -10px);
       padding-left: 0.3em;
       padding-right: 0.3em;
       display: ${props.isActive ? "block" : "none"};
       background-color: ${theme().colors.bgSec};
       overflow-y: overlay;
-      background-color: ${theme().colors.bgSec};
       flex-grow: 1;
       overflow-wrap: break-word;
       overflow-x: hidden;
+      position: relative;
+      background: ${theme().backdrop.property};
+      background-position: bottom !important;
+      background-repeat: no-repeat !important;
     }
-
     .chatroom .emote {
       height: 2em !important;
       display: inline-block;

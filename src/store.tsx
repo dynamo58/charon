@@ -59,6 +59,10 @@ export function GlobalContextProvider(props: any) {
       ui: "Arial",
       scale: 1.0,
     },
+
+    backdrop: {
+      property: "none",
+    },
   });
 
   // ==========================================================================
@@ -88,7 +92,7 @@ export function GlobalContextProvider(props: any) {
       font_ui: theme().fonts.ui,
       font_chat: theme().fonts.chat,
       font_scale: theme().fonts.scale,
-      backdrop_image: null,
+      backdrop: theme().backdrop,
     };
   };
 
@@ -111,19 +115,21 @@ export function GlobalContextProvider(props: any) {
           chat: res.font_chat,
           scale: res.font_scale,
         },
+        backdrop: res.backdrop,
       };
     });
 
     listen("request_prefs", async () => {
       console.log(`recd preferences window request`);
       const prefs_window = WebviewWindow.getByLabel("preferences")!;
-      console.log({ prefs_window });
 
-      prefs_window.emit("prefs_for_prefs", {
+      let prefs: IPreferences = {
         font: theme().fonts.ui,
         fontScale: theme().fonts.scale,
-        backdropImage: null, // TODO: backdrop
-      });
+        backdrop: theme().backdrop,
+      };
+
+      prefs_window.emit("prefs_for_prefs", prefs);
     });
 
     listen("prefs_for_main", async (e) => {
@@ -138,6 +144,7 @@ export function GlobalContextProvider(props: any) {
             scale: prefs.fontScale,
             ui: prefs.font,
           },
+          backdrop: prefs.backdrop,
         };
       });
 
