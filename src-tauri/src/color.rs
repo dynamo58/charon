@@ -42,7 +42,7 @@ fn find_fitting_color(fg: RGBColor, bg: RGBColor) -> RGBColor {
         new_fg.b = new_fg.b.saturating_add(ROUGHNESS);
     }
 
-    return new_fg;
+    new_fg
 }
 
 pub fn get_color_from_opt(c: Option<RGBColor>) -> String {

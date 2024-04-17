@@ -1,9 +1,11 @@
-use std::collections::HashMap;
-
-use tracing::warn;
-use twitch_irc::message::{PrivmsgMessage, ReplyToMessage, UserNoticeMessage};
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{badge::BadgeInfo, data::Dataset};
+use tracing::warn;
+use twitch_irc::message::{
+    ClearChatAction::*, ClearChatMessage, PrivmsgMessage, ReplyToMessage, ServerMessage,
+    UserNoticeMessage,
+};
 
 use crate::color::get_color_from_opt;
 
@@ -166,4 +168,41 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
     }
 
     out
+}
+
+#[derive(Clone, serde::Serialize)]
+pub struct SystemMessage {
+    message: String,
+}
+
+impl SystemMessage {
+    pub fn from_clearchatmsg(clrchat: ClearChatMessage) -> Self {
+        match clrchat.action {
+            ChatCleared => Self {
+                message: String::from("The chat has been cleared."),
+            },
+            UserBanned {
+                user_login,
+                user_id: _,
+            } => Self {
+                message: format!("{user_login} has been permanently banned."),
+            },
+            UserTimedOut {
+                user_login,
+                user_id: _,
+                timeout_length,
+            } => Self {
+                message: format!(
+                    "{user_login} has been timed out for {}s.",
+                    timeout_length.as_secs() // TODO: make a function for formattign thyme
+                ),
+            },
+        }
+    }
+
+    pub fn from<T: ToString>(s: T) -> Self {
+        Self {
+            message: s.to_string(),
+        }
+    }
 }

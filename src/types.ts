@@ -15,6 +15,7 @@ export interface Config {
 export enum PayloadKind {
   Privmsg,
   Usernotice,
+  Sysmsg
 }
 
 export interface IBadgeInfo {

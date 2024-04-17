@@ -27,20 +27,26 @@ pub fn handle_received_message(
 ) {
     match message {
         ServerMessage::Privmsg(privmsg) => {
-            let event_name = format!("privmsg__{}", privmsg.channel_login);
             handle
                 .emit_all(
-                    &event_name,
+                    &format!("privmsg__{}", privmsg.channel_login),
                     payload::PrivmsgPayload::from_privmsg(privmsg, dataset),
                 )
                 .unwrap();
         }
         ServerMessage::UserNotice(usrnotice) => {
-            let event_name = format!("usernotice__{}", usrnotice.channel_login);
             handle
                 .emit_all(
-                    &event_name,
+                    &format!("usernotice__{}", usrnotice.channel_login),
                     payload::UsernoticePayload::from_usernotice(usrnotice, dataset),
+                )
+                .unwrap();
+        }
+        ServerMessage::ClearChat(clrchat) => {
+            handle
+                .emit_all(
+                    &format!("sysmsg__{}", clrchat.channel_login),
+                    payload::SystemMessage::from_clearchatmsg(clrchat),
                 )
                 .unwrap();
         }

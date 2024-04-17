@@ -14,6 +14,7 @@ import Privmsg from "./messages/Privmsg";
 import Usernotice from "./messages/Usernotice";
 import { invoke } from "@tauri-apps/api";
 import { useGlobalContext } from "../store";
+import Sysmsg, { ISysmsgPayload } from "./messages/Sysmsg";
 
 interface IChatroomProps {
   isActive: boolean;
@@ -22,7 +23,7 @@ interface IChatroomProps {
 
 interface IMessageWrapper {
   kind: PayloadKind;
-  data: IPrivmgPayload | IUsernoticePayload;
+  data: IPrivmgPayload | IUsernoticePayload | ISysmsgPayload;
 }
 
 const Chatroom = (props: IChatroomProps) => {
@@ -61,6 +62,9 @@ const Chatroom = (props: IChatroomProps) => {
     });
     await listen(`usernotice__${props.channelName}`, (event: any) => {
       handlePayload<IUsernoticePayload>(event, PayloadKind.Usernotice);
+    });
+    await listen(`sysmsg__${props.channelName}`, (event: any) => {
+      handlePayload<ISysmsgPayload>(event, PayloadKind.Sysmsg);
     });
 
     await invoke("get_recent_messages", {
@@ -107,6 +111,9 @@ const Chatroom = (props: IChatroomProps) => {
                   <Usernotice
                     {...(item.data as IUsernoticePayload)}
                   ></Usernotice>
+                </Match>
+                <Match when={item.kind === PayloadKind.Sysmsg}>
+                  <Sysmsg {...(item.data as ISysmsgPayload)}></Sysmsg>
                 </Match>
               </Switch>
             );
