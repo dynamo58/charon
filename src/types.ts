@@ -20,7 +20,7 @@ export enum PayloadKind {
 
 export interface IBadgeInfo {
   title: string,
-  image_url_base: string,
+  url_3x: string,
 }
 
 export interface IPrivmgPayload {
@@ -72,4 +72,17 @@ export interface Theme {
   };
 
   backdrop: Backdrop,
+}
+
+export enum Provider {
+  Native,
+  SevenTv,
+  BTTV,
+  FFZ,
+}
+
+export interface Emote {
+  code: string,
+  provider: Provider,
+  url_3x: string,
 }

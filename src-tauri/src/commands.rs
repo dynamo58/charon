@@ -1,5 +1,7 @@
 use crate::data::Dataset;
 use crate::handle_received_message;
+use crate::payload::SystemMessage;
+use crate::shared::Levenshtein;
 use std::collections::HashSet;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager};
@@ -19,6 +21,17 @@ use crate::config::Config;
 use crate::Connections;
 
 use crate::apis::recent_messages;
+
+macro_rules! report_error {
+    ($handle:expr, $channel:expr, $message:expr) => {
+        let _ = $handle.emit_all(
+            &format!("sysmsg__{}", $channel),
+            SystemMessage {
+                message: format!("⚠️: {}", $message),
+            },
+        );
+    };
+}
 
 #[tauri::command]
 pub async fn send_message<'a>(
@@ -322,4 +335,42 @@ pub fn get_system_fonts() -> Result<String, String> {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct Preferences {
     font: String,
+}
+
+// given a substring, match all emotes (within the current context)
+// that include the given string as part of their code
+#[tauri::command]
+pub async fn query_emotes(
+    s: String,
+    channel_login: String,
+    dataset: State<'_, Arc<TMutex<Dataset>>>,
+    app_handle: tauri::AppHandle,
+) -> Result<String, String> {
+    info!("querying emotes on {channel_login} matching '{s}'");
+    let data = dataset.lock().await;
+
+    match data.query_emote_from_substr(&channel_login, &s) {
+        Some(es) => {
+            let mut es = es.clone();
+            es.sort_by_levenshtein(&s);
+
+            let ser = serde_json::to_string(&es);
+
+            if ser.is_err() {
+                report_error!(app_handle, &channel_login, "unknown; matching emote names");
+                return Err("Error".into());
+            }
+
+            Ok(ser.unwrap())
+        }
+
+        None => {
+            report_error!(
+                app_handle,
+                &channel_login,
+                "channel not in database; matching emote names"
+            );
+            Err("Error".into())
+        }
+    }
 }

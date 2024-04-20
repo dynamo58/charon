@@ -14,7 +14,7 @@ const Badge = (props: IBadgeInfo) => {
 
   return (
     <>
-      <img class="badge" src={props.image_url_base + "1"} />
+      <img class="badge" src={props.url_3x} />
     </>
   );
 };

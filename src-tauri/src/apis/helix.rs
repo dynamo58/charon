@@ -34,69 +34,52 @@ pub async fn get_channel_badges_from_id(
         .json::<BadgesRes>()
         .await?;
 
-    let mut badge_set = NativeBadgeSet(HashMap::new());
+    let mut badge_set = HashMap::new();
 
     for set_of_badges in &res.data {
         let set_id = set_of_badges.set_id.to_string();
         let mut badges = HashMap::new();
 
         for v in &set_of_badges.versions {
-            let badge_id = v.id.to_string();
-            let image_url_base = v
-                .image_url_1x
-                .get(..v.image_url_1x.len() - 1)
-                .unwrap()
-                .to_string();
-
-            let title = v.title.to_string();
-
             badges.insert(
-                badge_id,
+                v.id.to_string(),
                 BadgeInfo {
-                    title,
-                    image_url_base,
+                    title: v.title.to_owned(),
+                    url_3x: v.image_url_4x.to_owned(),
                 },
             );
         }
 
-        badge_set.0.insert(set_id, badges);
+        badge_set.insert(set_id, badges);
     }
 
-    let ffz_room = ffz::get_room(channel_id).await.context("buh")?;
+    let ffz_room = ffz::get_room(channel_id).await.context("buh")?; //#
 
     if let Some(mod_badge_url) = ffz_room.room.moderator_badge {
-        let base_url = mod_badge_url
-            .get(..mod_badge_url.len() - 1)
-            .unwrap()
-            .to_string();
-
-        let map = HashMap::from([(
-            "1".into(),
-            BadgeInfo {
-                title: "Moderator".into(),
-                image_url_base: base_url,
-            },
-        )]);
-
-        badge_set.0.insert("moderator".into(), map);
+        badge_set.insert(
+            "moderator".into(),
+            HashMap::from([(
+                "1".into(),
+                BadgeInfo {
+                    title: "Moderator".into(),
+                    url_3x: mod_badge_url,
+                },
+            )]),
+        );
     }
 
     if let Some(vip_badges) = &ffz_room.room.vip_badge {
-        if let Some(base_size_badge) = &vip_badges.n1 {
-            let base_url = base_size_badge
-                .get(..base_size_badge.len() - 1)
-                .unwrap()
-                .to_string();
-
-            let map = HashMap::from([(
-                "1".into(),
-                BadgeInfo {
-                    title: "VIP".into(),
-                    image_url_base: base_url,
-                },
-            )]);
-
-            badge_set.0.insert("vip".into(), map);
+        if let Some(four_x_badge) = &vip_badges.n4 {
+            badge_set.insert(
+                "vip".into(),
+                HashMap::from([(
+                    "1".into(),
+                    BadgeInfo {
+                        title: "VIP".into(),
+                        url_3x: four_x_badge.to_string(),
+                    },
+                )]),
+            );
         }
     }
 
@@ -116,32 +99,23 @@ pub async fn get_global_badges(auth: &UserToken) -> anyhow::Result<NativeBadgeSe
         .json::<BadgesRes>()
         .await?;
 
-    let mut badge_set = NativeBadgeSet(HashMap::new());
+    let mut badge_set = HashMap::new();
 
     for set_of_badges in &res.data {
         let set_id = set_of_badges.set_id.to_string();
         let mut badges = HashMap::new();
 
         for v in &set_of_badges.versions {
-            let badge_id = v.id.to_string();
-            let image_url_base = v
-                .image_url_1x
-                .get(..v.image_url_1x.len() - 1)
-                .unwrap()
-                .to_string();
-
-            let title = v.title.to_string();
-
             badges.insert(
-                badge_id,
+                v.id.to_string(),
                 BadgeInfo {
-                    title,
-                    image_url_base,
+                    title: v.title.to_owned(),
+                    url_3x: v.image_url_4x.to_owned(),
                 },
             );
         }
 
-        badge_set.0.insert(set_id, badges);
+        badge_set.insert(set_id, badges);
     }
 
     Ok(badge_set)

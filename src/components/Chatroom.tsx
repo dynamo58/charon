@@ -1,12 +1,18 @@
 import {
   For,
   Match,
+  Show,
   Switch,
   createEffect,
   createSignal,
   onMount,
 } from "solid-js";
-import { IPrivmgPayload, IUsernoticePayload, PayloadKind } from "../types";
+import {
+  Emote,
+  IPrivmgPayload,
+  IUsernoticePayload,
+  PayloadKind,
+} from "../types";
 import { listen } from "@tauri-apps/api/event";
 import { css } from "solid-styled";
 import { MAX_LINE_COUNT_PER_CHAT } from "../constants";
@@ -15,6 +21,7 @@ import Usernotice from "./messages/Usernotice";
 import { invoke } from "@tauri-apps/api";
 import { useGlobalContext } from "../store";
 import Sysmsg, { ISysmsgPayload } from "./messages/Sysmsg";
+import EmoteHinter from "./EmoteHinter";
 
 interface IChatroomProps {
   isActive: boolean;
@@ -97,6 +104,29 @@ const Chatroom = (props: IChatroomProps) => {
     }
   `;
 
+  const [showingEmoteHints, setShowingEmoteHints] =
+    createSignal<boolean>(false);
+  const [hintedEmotes, setHintedEmotes] = createSignal<Emote[]>([]);
+
+  window.addEventListener("lookingForEmote", ((evt: CustomEvent<string>) => {
+    if (!props.isActive) return;
+
+    invoke("query_emotes", {
+      channelLogin: props.channelName,
+      s: evt.detail,
+    }).then((res) => {
+      let emotes = JSON.parse(res as string) as Emote[];
+      setHintedEmotes(emotes);
+      setShowingEmoteHints(true);
+      window.dispatchEvent(new Event("scrollChat"));
+    });
+  }) as EventListener);
+
+  window.addEventListener("closeEmoteHinter", () => {
+    setShowingEmoteHints(false);
+    setHintedEmotes([]);
+  });
+
   return (
     <>
       <div class="chatroom" ref={divRef!}>
@@ -119,6 +149,9 @@ const Chatroom = (props: IChatroomProps) => {
             );
           }}
         </For>
+        <Show when={showingEmoteHints()}>
+          <EmoteHinter emotes={hintedEmotes()} />
+        </Show>
       </div>
     </>
   );

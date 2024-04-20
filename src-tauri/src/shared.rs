@@ -16,6 +16,7 @@ pub type MessageReceiver = UnboundedReceiver<ServerMessage>;
 use tauri::{AppHandle, Manager};
 
 use crate::data;
+use crate::emote::Emote;
 use crate::payload;
 
 const TWITCH_APP_ID: &'static str = "fz8cjqkn05ab6kiii0jqbhbgc08kv6";
@@ -122,4 +123,35 @@ impl Connections<'_> {
 
         Ok(())
     }
+}
+
+/// Computes the Levenshtein distance between two strings
+/// https://en.wikipedia.org/wiki/Levenshtein_distance
+pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
+    let len1 = s1.len();
+    let len2 = s2.len();
+
+    let mut dp = vec![vec![0; len2 + 1]; len1 + 1];
+
+    for i in 0..=len1 {
+        dp[i][0] = i;
+    }
+    for j in 0..=len2 {
+        dp[0][j] = j;
+    }
+
+    for (i, c1) in s1.chars().enumerate() {
+        for (j, c2) in s2.chars().enumerate() {
+            let cost = if c1 == c2 { 0 } else { 1 };
+            dp[i + 1][j + 1] = (dp[i][j + 1] + 1)
+                .min(dp[i + 1][j] + 1)
+                .min(dp[i][j] + cost);
+        }
+    }
+
+    dp[len1][len2]
+}
+
+pub trait Levenshtein {
+    fn sort_by_levenshtein(&mut self, key: &str);
 }

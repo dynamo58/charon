@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct BadgeInfo {
+    /// supposed name of theb badge
     pub title: String,
-    pub image_url_base: String,
+    /// usually 72x72
+    pub url_3x: String,
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
-pub struct NativeBadgeSet(pub HashMap<String, HashMap<String, BadgeInfo>>);
+pub type NativeBadgeSet = HashMap<String, HashMap<String, BadgeInfo>>;

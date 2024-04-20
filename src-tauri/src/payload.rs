@@ -1,10 +1,6 @@
-use std::{collections::HashMap, fmt::Debug};
-
 use crate::{badge::BadgeInfo, data::Dataset};
-use tracing::warn;
 use twitch_irc::message::{
-    ClearChatAction::*, ClearChatMessage, PrivmsgMessage, ReplyToMessage, ServerMessage,
-    UserNoticeMessage,
+    ClearChatAction::*, ClearChatMessage, PrivmsgMessage, ReplyToMessage, UserNoticeMessage,
 };
 
 use crate::color::get_color_from_opt;
@@ -20,43 +16,12 @@ pub struct PrivmsgPayload {
 
 impl PrivmsgPayload {
     pub fn from_privmsg(privmsg: PrivmsgMessage, dataset: &Dataset) -> PrivmsgPayload {
-        let mut sender_badges = vec![];
-
-        // TODO: ermmmmmmmmmmmm
-        if let Some(badge_data) = &dataset.channel_data.get(&privmsg.channel_login) {
-            let channel_badges = &badge_data.badges.0;
-
-            if let Some(&Some(ref badges_str)) = privmsg.source.tags.0.get("badges") {
-                if badges_str.len() > 0 {
-                    for b in badges_str.split(',').collect::<Vec<&str>>() {
-                        let chunks = b.split('/').collect::<Vec<&str>>();
-
-                        let set_id = chunks[0];
-                        let badge_id = chunks[1];
-
-                        if let Some(set) = channel_badges.get(set_id) {
-                            if let Some(badge) = set.get(badge_id) {
-                                sender_badges.push(badge.clone());
-                            } else {
-                                warn!(
-                                    "Badge not found; channel: {}, set id: {}, badge id: {}",
-                                    privmsg.channel_login, set_id, badge_id
-                                );
-                            }
-                        } else if let Some(set) = dataset.global_badges.0.get(set_id) {
-                            if let Some(badge) = set.get(badge_id) {
-                                sender_badges.push(badge.clone());
-                            } else {
-                                warn!(
-                                    "Badge not found; channel: {}, set id: {}, badge id: {}",
-                                    privmsg.channel_login, set_id, badge_id
-                                );
-                            }
-                        }
-                    }
-                }
+        let sender_badges = match privmsg.source.tags.0.get("badges") {
+            Some(&Some(ref badges_str)) => {
+                dataset.get_channel_user_native_badges(&privmsg.channel_login, badges_str)
             }
-        }
+            _ => vec![],
+        };
 
         PrivmsgPayload {
             sender_nick: privmsg.sender.name.clone(),
@@ -119,14 +84,10 @@ impl UsernoticePayload {
 }
 
 fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String {
-    // TODO: fix this
-    let dummy = HashMap::new();
-    let third_party_emotes;
+    let mut third_party_emotes = &vec![];
 
-    if let Some(channel_data) = &data.channel_data.get(privmsg.channel_login()) {
+    if let Some(channel_data) = &data.channel.get(privmsg.channel_login()) {
         third_party_emotes = &channel_data.third_party_emotes;
-    } else {
-        third_party_emotes = &dummy;
     }
 
     let mut out = String::new();
@@ -136,6 +97,7 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
 
         //     for these purposes a word is a string iff it has a dot somewhere
         //     in the middle and at least one of its sides is not purely numeric
+        // TODO: fix; this false-triggers on "test...."
         if let Some(dot_pos) = word.chars().position(|c| c == '.') {
             if dot_pos > 0
                 && dot_pos < word.len() - 1
@@ -150,7 +112,6 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
         }
 
         // decide if it is a native emote
-
         if let Some(emote_idx) = privmsg.emotes.iter().position(|e| e.code == word) {
             out.push_str(&format!(
                 "<img class='emote' src='https://static-cdn.jtvnw.net/emoticons/v2/{}/default/dark/3.0' />",
@@ -159,8 +120,12 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
             continue;
         }
 
-        if let Some(em) = third_party_emotes.get(word) {
-            out.push_str(&format!("<img class='emote' src='{em}' />"));
+        if let Some((_, em)) = third_party_emotes
+            .iter()
+            .enumerate()
+            .find(|(_, &ref e)| e.code == word)
+        {
+            out.push_str(&format!("<img class='emote' src='{}' />", em.url_3x));
             continue;
         }
 
@@ -172,7 +137,7 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
 
 #[derive(Clone, serde::Serialize)]
 pub struct SystemMessage {
-    message: String,
+    pub message: String,
 }
 
 impl SystemMessage {

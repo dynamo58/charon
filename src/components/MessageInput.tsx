@@ -26,6 +26,27 @@ const MessageInput = () => {
     if (!e.ctrlKey) messageInputRef.value = "";
   };
 
+  const handleInputChange = (newInput: string) => {
+    if (newInput.length === 0) {
+      setMessage("");
+      return;
+    }
+
+    // look if the last word isnt by chance
+    // a prefaced with `:` which would mean
+    // an attempt to open the emote hinter
+    const lastWord = newInput.split(" ").slice(-1)[0];
+    if (lastWord.length > 1 && lastWord.startsWith(":"))
+      window.dispatchEvent(
+        new CustomEvent<string>("lookingForEmote", {
+          detail: newInput.slice(1),
+        })
+      );
+    else window.dispatchEvent(new Event("closeEmoteHinter"));
+
+    setMessage(newInput);
+  };
+
   // fallback to random chars activating the message input
   registerKeybind(
     new Keybind(
@@ -36,6 +57,17 @@ const MessageInput = () => {
       }
     )
   );
+
+  window.addEventListener("emoteChosen", ((evt: CustomEvent<string>) => {
+    const emoteCode = evt.detail;
+
+    // replace the last word with the emote
+    let newMes = [message().split(" ").slice(0, -1), emoteCode, " "].join(" ");
+
+    setMessage(newMes);
+    window.dispatchEvent(new Event("closeEmoteHinter"));
+    messageInputRef.focus();
+  }) as EventListener);
 
   css`
     input {
@@ -79,7 +111,7 @@ const MessageInput = () => {
           type="text"
           ref={messageInputRef!}
           value={message()}
-          oninput={(el) => setMessage(el.target.value)}
+          oninput={(el) => handleInputChange(el.target.value)}
           onkeyup={handleMessageSubmission}
           placeholder="Send a message..."
         />
