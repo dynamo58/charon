@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api";
 import { useKeybindManager } from "../KeybindManager";
 import { Keybind } from "../KeybindManager";
+import { Emote } from "../types";
 
 const MessageInput = () => {
   const { theme, tabs, currTabIdx } = useGlobalContext();
@@ -12,21 +13,24 @@ const MessageInput = () => {
   let messageInputRef: HTMLInputElement;
 
   let [message, setMessage] = createSignal<string>("");
+  let [cursorPos, setCursorPos] = createSignal<number>(0);
+  let [lookingForEmote, setLookingForEmote] = createSignal<boolean>(true);
 
   const handleMessageSubmission = async (e: KeyboardEvent) => {
-    if (e.key !== "Enter" || message() === "") return;
+    if (e.key !== "Enter" || message() === "" || lookingForEmote()) return;
 
-    console.log(
-      await invoke("send_message", {
-        message: message(),
-        channelName: tabs()[currTabIdx()],
-      })
-    );
+    await invoke("send_message", {
+      message: message(),
+      channelName: tabs()[currTabIdx()].ident,
+    });
 
     if (!e.ctrlKey) messageInputRef.value = "";
   };
 
-  const handleInputChange = (newInput: string) => {
+  const handleInputChange = (e: InputEvent & { target: HTMLInputElement }) => {
+    const newInput = e.target.value;
+    setCursorPos(e.target.selectionStart ?? 0);
+
     if (newInput.length === 0) {
       setMessage("");
       return;
@@ -36,16 +40,57 @@ const MessageInput = () => {
     // a prefaced with `:` which would mean
     // an attempt to open the emote hinter
     const lastWord = newInput.split(" ").slice(-1)[0];
-    if (lastWord.length > 1 && lastWord.startsWith(":"))
+    if (lastWord.length > 1 && lastWord.startsWith(":")) {
       window.dispatchEvent(
         new CustomEvent<string>("lookingForEmote", {
-          detail: newInput.slice(1),
+          detail: lastWord.slice(1),
         })
       );
-    else window.dispatchEvent(new Event("closeEmoteHinter"));
+      setLookingForEmote(true);
+    } else {
+      window.dispatchEvent(new Event("closeEmoteHinter"));
+      setLookingForEmote(false);
+    }
 
     setMessage(newInput);
   };
+
+  // turn the word before the cursor into an emote upon <Tab> press
+  registerKeybind(
+    new Keybind(
+      "tab an emote",
+      (e) => e.key === "Tab" && !lookingForEmote(),
+      async () => {
+        let msg = message();
+        const afterWordStartIdx = cursorPos();
+
+        let currIdx = cursorPos();
+        while (currIdx > 0 && msg.charAt(currIdx - 1) !== " ") currIdx--;
+
+        const word = msg.slice(currIdx, afterWordStartIdx);
+        const beforeWord = message().slice(0, currIdx);
+        const afterWord = message().slice(afterWordStartIdx);
+
+        if (word.length == 0) return;
+        const matchedEmotes = JSON.parse(
+          (await invoke("query_emotes", {
+            channelLogin: tabs()[currTabIdx()].ident,
+            s: word,
+          })) as string
+        ) as Emote[];
+
+        if (matchedEmotes.length === 0) return;
+
+        setMessage(beforeWord + matchedEmotes[0].code + " " + afterWord);
+
+        messageInputRef.focus();
+        messageInputRef.selectionStart =
+          beforeWord.length + matchedEmotes[0].code.length + 2;
+        messageInputRef.selectionEnd =
+          beforeWord.length + matchedEmotes[0].code.length + 2;
+      }
+    )
+  );
 
   // fallback to random chars activating the message input
   registerKeybind(
@@ -62,7 +107,9 @@ const MessageInput = () => {
     const emoteCode = evt.detail;
 
     // replace the last word with the emote
-    let newMes = [message().split(" ").slice(0, -1), emoteCode, " "].join(" ");
+    let newMes = [...message().split(" ").slice(0, -1), emoteCode, " "].join(
+      " "
+    );
 
     setMessage(newMes);
     window.dispatchEvent(new Event("closeEmoteHinter"));
@@ -111,8 +158,18 @@ const MessageInput = () => {
           type="text"
           ref={messageInputRef!}
           value={message()}
-          oninput={(el) => handleInputChange(el.target.value)}
+          oninput={(e) => handleInputChange(e)}
           onkeyup={handleMessageSubmission}
+          //
+          onkeydown={(e) =>
+            setCursorPos((e.target as HTMLInputElement).selectionStart!)
+          }
+          onseeked={(e) =>
+            setCursorPos((e.target as HTMLInputElement).selectionStart!)
+          }
+          onfocus={(e) =>
+            setCursorPos((e.target as HTMLInputElement).selectionStart!)
+          }
           placeholder="Send a message..."
         />
         <div class="message-len">{message().length}</div>

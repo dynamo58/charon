@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import { For } from "solid-js";
 import Chatroom from "../components/Chatroom";
@@ -8,10 +8,13 @@ import { useGlobalContext } from "../store";
 import AuthModal from "../components/AuthModal";
 import { css } from "solid-styled";
 import MessageInput from "../components/MessageInput";
+import JoinChannelModal from "../components/JoinChannelModal";
+import { Keybind, useKeybindManager } from "../KeybindManager";
 
 const Main = () => {
   const { theme } = useGlobalContext();
   const { tabs, currTabIdx } = useGlobalContext();
+  const { registerKeybind } = useKeybindManager();
 
   let topBarRef: HTMLDivElement;
   let appDivRef: HTMLDivElement;
@@ -35,6 +38,30 @@ const Main = () => {
     }
   });
 
+  const [showJoinModal, setShowJoinModal] = createSignal<boolean>(false);
+
+  registerKeybind(
+    new Keybind(
+      "open new channel",
+      (e) => e.ctrlKey && e.key === "n",
+      (_) => {
+        setShowJoinModal(true);
+      }
+    )
+  );
+
+  window.addEventListener("close:join:channel:modal", () => {
+    setShowJoinModal(false);
+  });
+
+  onMount(() => {
+    setTimeout(() => {
+      if (tabs().length === 0) {
+        setShowJoinModal(true);
+      }
+    }, 500);
+  });
+
   css`
     #main {
       background-color: ${theme().colors.bgMain};
@@ -56,6 +83,9 @@ const Main = () => {
 
   return (
     <div id="main" ref={appDivRef!}>
+      <Show when={showJoinModal()}>
+        <JoinChannelModal />
+      </Show>
       <AuthModal showing={modalShowing()} />
       <div id="tabs" ref={topBarRef!}>
         <For each={tabs()}>
@@ -64,17 +94,14 @@ const Main = () => {
               index={idx()}
               isActive={idx() === currTabIdx()}
               isChannelLive={false}
-              channelName={item}
+              channel={item}
             ></Tab>
           )}
         </For>
       </div>
       <For each={tabs()}>
         {(item, idx) => (
-          <Chatroom
-            channelName={item}
-            isActive={idx() === currTabIdx()}
-          ></Chatroom>
+          <Chatroom channel={item} isActive={idx() === currTabIdx()}></Chatroom>
         )}
       </For>
       <MessageInput />

@@ -7,17 +7,17 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { Config, IPreferences } from "./types";
+import { Tab, Config, IPreferences, Platform } from "./types";
 import { Theme } from "./types";
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/window";
 
 interface ContextProps {
-  tabs: Accessor<string[]>;
-  openTab: (label: string) => void;
+  tabs: Accessor<Tab[]>;
+  openTab: (label: string, platform: Platform) => void;
   currTabIdx: Accessor<number>;
   setCurrTabIdx: Setter<number>;
-  closeTab: (label: string) => void;
+  closeTab: (tabIdx: number) => void;
   theme: Accessor<Theme>;
   setTheme: Setter<Theme>;
 }
@@ -33,7 +33,7 @@ export function GlobalContextProvider(props: any) {
   // REACTIVITY
   // ==========================================================================
 
-  const [tabs, setTabs] = createSignal<string[]>([]);
+  const [tabs, setTabs] = createSignal<Tab[]>([]);
   const [currTabIdx, setCurrTabIdx] = createSignal<number>(0);
 
   const [theme, setTheme] = createSignal<Theme>({
@@ -69,26 +69,47 @@ export function GlobalContextProvider(props: any) {
   // WRAPPERS
   // ==========================================================================
 
-  const openTab = async (label: string) => {
+  const openTab = async (label: string, platform: Platform) => {
     console.log(
-      await invoke("join_channel", { channelName: label.toLowerCase() })
+      `[TABS] opening channel using label ${label} and platform ${platform}`
     );
-    setTabs((t) => [...t, label]);
+
+    const uuid = (await invoke("generate_uuid")) as string;
+    await invoke("join_channel", { channelName: label.toLowerCase() });
+
+    const channel: Tab = {
+      platform,
+      uuid,
+      label: label.toLowerCase(),
+      ident: label.toLowerCase(),
+    };
+
+    setTabs((t) => [...t, channel]);
     setCurrTabIdx((_) => tabs().length - 1);
 
     saveConfig();
   };
 
-  const closeTab = async (label: string) => {
-    setTabs((t) => t.filter((a) => a !== label));
-    console.log(await invoke("part_channel", { channelName: label }));
+  const closeTab = async (tabIdx: number) => {
+    const tab = tabs()[tabIdx];
+
+    // close the tab
+    setTabs((t) => t.filter((_a, i) => i !== tabIdx));
+
+    // get rid of the channel data by parting it iff
+    // its data isnt needed in a tab elsewhere
+    if (
+      !tabs().some((t) => t.platform === tab.platform && t.ident === tab.ident)
+    ) {
+      await invoke("part_channel", { channelName: tab.ident });
+    }
 
     saveConfig();
   };
 
   const gather_config = (): Config => {
     return {
-      channels: tabs(),
+      tabs: tabs(),
       font_ui: theme().fonts.ui,
       font_chat: theme().fonts.chat,
       font_scale: theme().fonts.scale,
@@ -97,16 +118,14 @@ export function GlobalContextProvider(props: any) {
   };
 
   const saveConfig = async () => {
-    console.log(
-      await invoke("save_config", {
-        jsonStr: JSON.stringify(gather_config()),
-      })
-    );
+    await invoke("save_config", {
+      jsonStr: JSON.stringify(gather_config()),
+    });
   };
 
   onMount(async () => {
     let res = JSON.parse(await invoke("fetch_config")) as Config;
-    setTabs(res.channels);
+    setTabs(res.tabs);
     setTheme((t) => {
       return {
         ...t,
@@ -120,7 +139,7 @@ export function GlobalContextProvider(props: any) {
     });
 
     listen("request_prefs", async () => {
-      console.log(`recd preferences window request`);
+      console.log(`[STORE] got request to deliver preferences to their tab`);
       const prefs_window = WebviewWindow.getByLabel("preferences")!;
 
       let prefs: IPreferences = {
@@ -133,7 +152,7 @@ export function GlobalContextProvider(props: any) {
     });
 
     listen("prefs_for_main", async (e) => {
-      console.log(`got prefs from preferences window`);
+      console.log(`[STORE] preferences window is pushing`);
       const prefs = JSON.parse(e.payload as string) as IPreferences;
 
       setTheme((t) => {
@@ -148,13 +167,9 @@ export function GlobalContextProvider(props: any) {
         };
       });
 
-      window.dispatchEvent(new Event("scrollChat"));
-
-      console.log(
-        await invoke("save_config", {
-          jsonStr: JSON.stringify(gather_config()),
-        })
-      );
+      await invoke("save_config", {
+        jsonStr: JSON.stringify(gather_config()),
+      });
     });
   });
 

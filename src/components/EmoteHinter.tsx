@@ -55,7 +55,7 @@ const EmoteHinter = (props: EmoteHinterProps) => {
 
   registerKeybind(
     new Keybind(
-      "Iterate selected emote",
+      "iterate selected emote",
       (e) => e.key === "Tab",
       () => {
         setSelIdx((selIdx() + 1) % props.emotes.length);
@@ -75,10 +75,6 @@ const EmoteHinter = (props: EmoteHinterProps) => {
       true
     )
   );
-
-  createEffect(() => {
-    console.log(selIdx(), props.emotes[selIdx()]);
-  });
 
   return (
     <div class="hinter">

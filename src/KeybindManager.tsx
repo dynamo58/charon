@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api";
-import { useGlobalContext } from "./store";
 import { createContext, createSignal, useContext } from "solid-js";
 
 export class Keybind {
@@ -29,8 +28,6 @@ export class Keybind {
 
   eval(evt: KeyboardEvent): boolean {
     const shouldTrigger = this.activator(evt);
-    console.log("buh");
-    console.log(this.desc, shouldTrigger, this.blocks);
 
     if (shouldTrigger) {
       console.log(`[INFO][KBM]\t Running "${this.desc}"`);
@@ -43,6 +40,7 @@ export class Keybind {
 
 interface KBContextProps {
   registerKeybind: (kb: Keybind) => void;
+  triggerManually: (e: KeyboardEvent) => void;
 }
 
 const KeybindContext = createContext<KBContextProps>();
@@ -51,14 +49,6 @@ export function KeybindManager(props: any) {
   const [keybinds, setKeybinds] = createSignal<Keybind[]>([
     // default global keybinds
 
-    new Keybind(
-      "Open a channel",
-      (e) => e.ctrlKey && e.key === "n",
-      (_) => {
-        const new_tab_label = prompt("New chanel:");
-        if (new_tab_label !== null) openTab(new_tab_label);
-      }
-    ),
     new Keybind(
       "Open preferences window",
       (e) => e.ctrlKey && e.key === "p",
@@ -69,13 +59,20 @@ export function KeybindManager(props: any) {
       }
     ),
   ]);
-  const { openTab } = useGlobalContext();
 
-  window.addEventListener("keydown", async (e) => {
+  const handleKeydown = (e: KeyboardEvent) => {
     for (let kb of keybinds()) {
       if (kb.eval(e)) break;
     }
+  };
+
+  window.addEventListener("keydown", async (e) => {
+    handleKeydown(e);
   });
+
+  const triggerManually = (e: KeyboardEvent) => {
+    handleKeydown(e);
+  };
 
   const registerKeybind = (kb: Keybind) => {
     // order really matters here!
@@ -89,6 +86,7 @@ export function KeybindManager(props: any) {
   return (
     <KeybindContext.Provider
       value={{
+        triggerManually,
         registerKeybind,
       }}
     >

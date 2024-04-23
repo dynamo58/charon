@@ -342,6 +342,7 @@ dependencies = [
  "tracing-subscriber",
  "twitch-irc",
  "twitch_api",
+ "uuid",
 ]
 
 [[package]]

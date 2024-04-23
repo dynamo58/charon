@@ -12,6 +12,8 @@ import {
   IPrivmgPayload,
   IUsernoticePayload,
   PayloadKind,
+  Platform,
+  Tab,
 } from "../types";
 import { listen } from "@tauri-apps/api/event";
 import { css } from "solid-styled";
@@ -25,7 +27,7 @@ import EmoteHinter from "./EmoteHinter";
 
 interface IChatroomProps {
   isActive: boolean;
-  channelName: string;
+  channel: Tab;
 }
 
 interface IMessageWrapper {
@@ -64,19 +66,21 @@ const Chatroom = (props: IChatroomProps) => {
   });
 
   onMount(async () => {
-    await listen(`privmsg__${props.channelName}`, (event: any) => {
+    await listen(`privmsg__${props.channel.ident}`, (event: any) => {
       handlePayload<IPrivmgPayload>(event, PayloadKind.Privmsg);
     });
-    await listen(`usernotice__${props.channelName}`, (event: any) => {
+    await listen(`usernotice__${props.channel.ident}`, (event: any) => {
       handlePayload<IUsernoticePayload>(event, PayloadKind.Usernotice);
     });
-    await listen(`sysmsg__${props.channelName}`, (event: any) => {
+    await listen(`sysmsg__${props.channel.ident}`, (event: any) => {
       handlePayload<ISysmsgPayload>(event, PayloadKind.Sysmsg);
     });
 
-    await invoke("get_recent_messages", {
-      channelName: props.channelName,
-    });
+    if (props.channel.platform === Platform.Twitch) {
+      await invoke("get_recent_messages", {
+        channelName: props.channel.ident,
+      });
+    }
 
     window.addEventListener("scrollChat", () => {
       divRef.scrollTop = divRef.scrollHeight;
@@ -88,7 +92,7 @@ const Chatroom = (props: IChatroomProps) => {
       padding-left: 0.3em;
       padding-right: 0.3em;
       display: ${props.isActive ? "block" : "none"};
-      background-color: ${theme().colors.bgSec};
+      background-color: ${theme().colors.bgMain};
       overflow-y: overlay;
       flex-grow: 1;
       overflow-wrap: break-word;
@@ -112,7 +116,7 @@ const Chatroom = (props: IChatroomProps) => {
     if (!props.isActive) return;
 
     invoke("query_emotes", {
-      channelLogin: props.channelName,
+      channelLogin: props.channel.ident,
       s: evt.detail,
     }).then((res) => {
       let emotes = JSON.parse(res as string) as Emote[];
@@ -135,15 +139,13 @@ const Chatroom = (props: IChatroomProps) => {
             return (
               <Switch>
                 <Match when={item.kind === PayloadKind.Privmsg}>
-                  <Privmsg {...(item.data as IPrivmgPayload)}></Privmsg>
+                  <Privmsg {...(item.data as IPrivmgPayload)} />
                 </Match>
                 <Match when={item.kind === PayloadKind.Usernotice}>
-                  <Usernotice
-                    {...(item.data as IUsernoticePayload)}
-                  ></Usernotice>
+                  <Usernotice {...(item.data as IUsernoticePayload)} />
                 </Match>
                 <Match when={item.kind === PayloadKind.Sysmsg}>
-                  <Sysmsg {...(item.data as ISysmsgPayload)}></Sysmsg>
+                  <Sysmsg {...(item.data as ISysmsgPayload)} />
                 </Match>
               </Switch>
             );

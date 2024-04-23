@@ -12,14 +12,29 @@ use anyhow::{self, Context};
 
 use tracing::info;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Backdrop {
-    property: String,
+    pub property: String,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum Platform {
+    YouTube,
+    Twitch,
+    Kick,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Tab {
+    pub label: String,
+    pub ident: String,
+    pub uuid: String,
+    pub platform: Platform,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub channels: Vec<String>,
+    pub tabs: Vec<Tab>,
     pub font_ui: String,
     pub font_chat: String,
     pub font_scale: f32,
@@ -29,7 +44,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            channels: vec![],
+            tabs: vec![],
             font_ui: String::from("Arial"),
             font_chat: String::from("Arial"),
             font_scale: 1f32,
@@ -43,7 +58,7 @@ impl Default for Config {
 impl Config {
     // makes sure that the config dir is properly structured
     fn scaffold_dir() -> anyhow::Result<std::path::PathBuf> {
-        let proj_dirs = ProjectDirs::from("org", "gh_dynamo58", "charon")
+        let proj_dirs = ProjectDirs::from("org", "gh_dynamo58", "conduit")
             .context("Error: couldn't get home directory")?;
 
         let config_dir = proj_dirs.config_dir();
@@ -60,7 +75,7 @@ impl Config {
 
             let mut file = File::create(config_file)?;
             let config = Self::default();
-            let json = serde_json::to_string(&config)?;
+            let json = serde_json::to_string_pretty(&config)?;
             file.write_all(json.as_bytes())?;
         }
 
@@ -86,7 +101,7 @@ impl Config {
         let config_file = config_dir.join("config.json");
 
         let mut file = File::create(config_file)?;
-        let json = serde_json::to_string(&self)?;
+        let json = serde_json::to_string_pretty(&self)?;
         file.write_all(json.as_bytes())?;
 
         Ok(())

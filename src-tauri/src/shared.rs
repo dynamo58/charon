@@ -16,7 +16,6 @@ pub type MessageReceiver = UnboundedReceiver<ServerMessage>;
 use tauri::{AppHandle, Manager};
 
 use crate::data;
-use crate::emote::Emote;
 use crate::payload;
 
 const TWITCH_APP_ID: &'static str = "fz8cjqkn05ab6kiii0jqbhbgc08kv6";

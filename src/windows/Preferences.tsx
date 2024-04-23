@@ -69,12 +69,12 @@ function Preferences() {
     let ffs = JSON.parse(res) as string[];
     setFonts([...STATIC_FONTS, ...ffs]);
 
-    console.log(`requesting prefs from main ${WebviewWindow.name}`);
+    console.log(`[STORE] requesting prefs from main ${WebviewWindow.name}`);
     await main_window.emit("request_prefs");
   });
 
   listen("prefs_for_prefs", (e) => {
-    console.log(`received prefs from main`);
+    console.log(`[STORE] received prefs from main`);
     const prefs = e.payload as IPreferences;
     applyPrefs(prefs);
   });

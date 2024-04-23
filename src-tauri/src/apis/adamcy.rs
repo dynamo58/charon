@@ -1,4 +1,5 @@
 pub async fn get_all_3rd_party_channel_emotes(channel_name: &str) -> anyhow::Result<Vec<Emote>> {
+    dbg!(channel_name);
     let res = Client::new()
         .get(&format!(
             "https://emotes.adamcy.pl/v1/channel/{channel_name}/emotes/ffz.bttv.7tv"

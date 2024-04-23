@@ -22,16 +22,50 @@ use crate::Connections;
 
 use crate::apis::recent_messages;
 
-macro_rules! report_error {
-    ($handle:expr, $channel:expr, $message:expr) => {
-        let _ = $handle.emit_all(
-            &format!("sysmsg__{}", $channel),
-            SystemMessage {
-                message: format!("⚠️: {}", $message),
-            },
-        );
-    };
+pub fn report(handle: &AppHandle, channel_name: &str, msg: String) {
+    handle
+        .emit_all(
+            &format!("sysmsg__{}", channel_name),
+            SystemMessage { message: msg },
+        )
+        .unwrap();
 }
+
+// pub enum ReportableError {
+//     Recoverable(String),
+//     Fatal(String),
+// }
+
+// trait MakeReport {
+//     fn make_report(&self, handle: AppHandle, channel_name: &str);
+// }
+
+// impl MakeReport for Vec<ReportableError> {
+//     fn make_report(&self, handle: AppHandle, channel_name: &str) {
+//         let _ = &self.iter().for_each(|e| match e {
+//             ReportableError::Fatal(s) => report(&handle, channel_name, format!("⚠️ FATAL: {s}")),
+//             ReportableError::Recoverable(s) => {
+//                 report(&handle, channel_name, format!("⚠️ ERROR: {s}"))
+//             }
+//         });
+//     }
+// }
+
+// pub enum ReportableResult {
+//     Ok,
+//     Err(Vec<ReportableError>),
+// }
+
+// impl ReportableResult {
+//     pub fn consume(&self, app_handle: AppHandle, channel_name: &str) {
+//         match self {
+//             Self::Ok => (),
+//             Self::Err(e) => e.make_report(app_handle, channel_name),
+//         }
+//     }
+// }
+
+// TODO: make frontend call `ready` to init, move shit from main into there
 
 #[tauri::command]
 pub async fn send_message<'a>(
@@ -58,6 +92,7 @@ pub async fn join_channel(
     channel_name: String,
     conns: State<'_, Arc<TMutex<Connections<'_>>>>,
     dataset: State<'_, Arc<TMutex<Dataset>>>,
+    handle: AppHandle,
 ) -> Result<String, String> {
     info!("joining #{channel_name}");
 
@@ -69,9 +104,8 @@ pub async fn join_channel(
     let conn = c.authed.as_ref().unwrap();
     let mut data = dataset.lock().await;
 
-    data.add_channel(&conn.helix_user_token, &conn.helix, channel_name.clone())
-        .await
-        .unwrap();
+    data.add_channel(&conn.helix_user_token, &conn.helix, &channel_name, &handle)
+        .await;
 
     c.anon_client.join(channel_name.clone()).unwrap();
     conn.client.join(channel_name).unwrap();
@@ -271,12 +305,12 @@ pub async fn authentificate(
     let config = config.inner().lock().await;
 
     if let Some(a) = &conns.authed {
-        (*data) = Dataset::from_config(&config, &a.helix_user_token, &a.helix)
+        (*data) = Dataset::from_config(&config, &a.helix_user_token, &a.helix, &app_handle)
             .await
             .unwrap();
 
-        for c in &config.channels {
-            a.client.join(c.clone()).unwrap();
+        for tab in &config.tabs {
+            a.client.join(tab.ident.clone()).unwrap();
         }
     }
 
@@ -357,7 +391,11 @@ pub async fn query_emotes(
             let ser = serde_json::to_string(&es);
 
             if ser.is_err() {
-                report_error!(app_handle, &channel_login, "unknown; matching emote names");
+                report(
+                    &app_handle,
+                    &channel_login,
+                    "unknown; matching emote names".into(),
+                );
                 return Err("Error".into());
             }
 
@@ -365,12 +403,17 @@ pub async fn query_emotes(
         }
 
         None => {
-            report_error!(
-                app_handle,
+            report(
+                &app_handle,
                 &channel_login,
-                "channel not in database; matching emote names"
+                "channel not in database; matching emote names".into(),
             );
             Err("Error".into())
         }
     }
+}
+
+#[tauri::command]
+pub fn generate_uuid() -> Result<String, String> {
+    Ok(uuid::Uuid::new_v4().to_string())
 }

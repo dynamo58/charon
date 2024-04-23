@@ -1,18 +1,19 @@
 import { JSXElement } from "solid-js";
 import { css } from "solid-styled";
 import { useGlobalContext } from "../store";
+import { Tab as TabData } from "../types";
 
 interface ITabProps {
   children?: JSXElement;
   isChannelLive: boolean;
   isActive: boolean;
   index: number;
-  channelName: string;
+  channel: TabData;
 }
 
 const Tab = (props: ITabProps) => {
   const { theme } = useGlobalContext();
-  const { setCurrTabIdx, closeTab, tabs } = useGlobalContext();
+  const { setCurrTabIdx, closeTab } = useGlobalContext();
   const index = props.index;
 
   css`
@@ -23,8 +24,9 @@ const Tab = (props: ITabProps) => {
       background-color: ${props.isActive
         ? theme().colors.bgTern
         : theme().colors.bgSec};
-      font-size: 0.8em;
-      padding: 0 3px;
+      font-size: 1em;
+
+      padding: 0.2em;
       display: inline-block;
       margin-left: 5px;
       cursor: pointer;
@@ -50,11 +52,11 @@ const Tab = (props: ITabProps) => {
           setCurrTabIdx(index);
         }}
       >
-        {props.channelName}
+        {props.channel.label}
         <span
           class="close-btn"
           onclick={() => {
-            closeTab(tabs()[index]);
+            closeTab(index);
           }}
         >
           ×

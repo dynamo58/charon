@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use tauri::AppHandle;
 use tracing::warn;
 use twitch_api::{helix::channels::ChannelInformation, twitch_oauth2::UserToken, HelixClient};
 
@@ -26,7 +27,7 @@ pub struct GlobalData {
     pub native_badges: NativeBadgeSet,
 }
 
-#[derive(Debug, Clone, serde::Deserialize, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Dataset {
     /// channel-specific data
     pub channel: HashMap<String, ChannelData>,
@@ -39,11 +40,14 @@ impl Dataset {
         config: &Config,
         auth: &UserToken,
         helix_client: &HelixClient<'_, reqwest::Client>,
+        handle: &AppHandle,
     ) -> anyhow::Result<Self> {
-        let mut result = Dataset::default();
+        let mut result = Self::default();
 
-        for c in &config.channels {
-            result.add_channel(auth, helix_client, c.into()).await?;
+        for tab in &config.tabs {
+            result
+                .add_channel(auth, helix_client, &tab.ident, handle)
+                .await;
         }
 
         result.global.native_badges = get_global_badges(auth).await?;
@@ -59,30 +63,68 @@ impl Dataset {
         &mut self,
         auth: &UserToken,
         helix_client: &HelixClient<'_, reqwest::Client>,
-        channel_name: String,
-    ) -> anyhow::Result<()> {
+        channel_name: &str,
+        handle: &AppHandle,
+    ) {
         let info = helix_client
-            .get_channel_from_login(&channel_name, auth)
-            .await?
-            .context("oopsie") //#
-            .unwrap();
-        let badges = get_channel_badges_from_id(info.broadcaster_id.to_string(), &auth)
-            .await
-            .unwrap(); //#
-        let third_party_emotes = get_all_3rd_party_channel_emotes(info.broadcaster_login.as_str())
-            .await
-            .unwrap(); //#
+            .get_channel_from_login(channel_name, auth)
+            .await;
+
+        if let Err(_) = info {
+            crate::commands::report(
+                &handle,
+                channel_name,
+                "⚠️ Fatal: Twitch connection failed".into(),
+            );
+            return;
+        }
+
+        let info = info.unwrap();
+
+        if let None = info {
+            crate::commands::report(
+                &handle,
+                channel_name,
+                "⚠️ Fatal: channel does not exist".into(),
+            );
+            return;
+        }
+
+        let info = info.unwrap();
+
+        let badges = get_channel_badges_from_id(info.broadcaster_id.to_string(), &auth).await;
+
+        if let Err(_) = badges {
+            crate::commands::report(
+                &handle,
+                channel_name,
+                "⚠️ Warning: failed loading native badges for channel".into(),
+            );
+        }
+
+        let badges = badges.unwrap();
+
+        let third_party_emotes =
+            get_all_3rd_party_channel_emotes(info.broadcaster_login.as_str()).await;
+
+        if let Err(_) = third_party_emotes {
+            crate::commands::report(
+                &handle,
+                channel_name,
+                "⚠️ Warning: failed loading 3rd party emotes from Adamcy API".into(),
+            );
+        }
+
+        let third_party_emotes = third_party_emotes.unwrap_or_default();
 
         self.channel.insert(
-            channel_name.clone(),
+            channel_name.to_string(),
             ChannelData {
                 info,
                 badges,
                 third_party_emotes,
             },
         );
-
-        Ok(())
     }
 
     /// returns `None` if dataset doesn't have the specified channel for some reason

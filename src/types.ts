@@ -4,8 +4,41 @@ export interface Backdrop {
   property: string,
 }
 
+export enum Platform {
+  YouTube = "YouTube",
+  Twitch = "Twitch",
+  Kick = "Kick"
+}
+
+export namespace Platform {
+  export function toIframeUrl(pl: Platform, identifier: string) {
+    switch (pl) {
+      case Platform.Twitch:
+        return `https://www.twitch.tv/embed/${identifier}/chat?parent=localhost&darkpopout`;
+      case Platform.Kick:
+        return `https://kick.com/${identifier}/chatroom`;
+      case Platform.YouTube:
+        return `https://www.youtube.com/live_chat?v=${identifier}&amp;embed_domain=localhost`
+    }
+  }
+}
+
+
+// i.e. one tab in the app
+export interface Tab {
+  // what the channel is labeled at the top of the app
+  label: string,
+  // which website the channel corresponds to
+  platform: Platform,
+  // for twitch/kick streams this would be the channel name
+  // for youtube this would be a the URL `v` param
+  ident: string,
+  // unique identifier for the tab
+  uuid: string,
+}
+
 export interface Config {
-  channels: string[],
+  tabs: Tab[],
   font_ui: string,
   font_chat: string,
   font_scale: number,
@@ -86,3 +119,4 @@ export interface Emote {
   provider: Provider,
   url_3x: string,
 }
+
