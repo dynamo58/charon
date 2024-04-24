@@ -15,9 +15,10 @@ import { WebviewWindow } from "@tauri-apps/api/window";
 interface ContextProps {
   tabs: Accessor<Tab[]>;
   openTab: (label: string, platform: Platform) => void;
+  closeTab: (tabIdx: number) => void;
+  setNewTabs: (ts: Tab[], newIdx: number) => void;
   currTabIdx: Accessor<number>;
   setCurrTabIdx: Setter<number>;
-  closeTab: (tabIdx: number) => void;
   theme: Accessor<Theme>;
   setTheme: Setter<Theme>;
 }
@@ -107,7 +108,13 @@ export function GlobalContextProvider(props: any) {
     saveConfig();
   };
 
-  const gather_config = (): Config => {
+  const setNewTabs = (ts: Tab[], newIdx: number) => {
+    setTabs(ts);
+    setCurrTabIdx(newIdx);
+    saveConfig();
+  };
+
+  const gatherConfig = (): Config => {
     return {
       tabs: tabs(),
       font_ui: theme().fonts.ui,
@@ -119,7 +126,7 @@ export function GlobalContextProvider(props: any) {
 
   const saveConfig = async () => {
     await invoke("save_config", {
-      jsonStr: JSON.stringify(gather_config()),
+      jsonStr: JSON.stringify(gatherConfig()),
     });
   };
 
@@ -168,7 +175,7 @@ export function GlobalContextProvider(props: any) {
       });
 
       await invoke("save_config", {
-        jsonStr: JSON.stringify(gather_config()),
+        jsonStr: JSON.stringify(gatherConfig()),
       });
     });
   });
@@ -178,9 +185,10 @@ export function GlobalContextProvider(props: any) {
       value={{
         tabs,
         openTab,
+        closeTab,
+        setNewTabs,
         currTabIdx,
         setCurrTabIdx,
-        closeTab,
         theme,
         setTheme,
       }}

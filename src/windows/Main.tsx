@@ -1,15 +1,24 @@
 import { Show, createSignal, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import { For } from "solid-js";
+
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      dndzone: [() => any, (v: any) => any];
+    }
+  }
+}
+
 import Chatroom from "../components/Chatroom";
 
-import Tab from "../components/Tab";
 import { useGlobalContext } from "../store";
 import AuthModal from "../components/AuthModal";
 import { css } from "solid-styled";
 import MessageInput from "../components/MessageInput";
 import JoinChannelModal from "../components/JoinChannelModal";
 import { Keybind, useKeybindManager } from "../KeybindManager";
+import TabLayoutDraggable from "../components/TabLayoutDraggable";
 
 const Main = () => {
   const { theme } = useGlobalContext();
@@ -86,19 +95,14 @@ const Main = () => {
       <Show when={showJoinModal()}>
         <JoinChannelModal />
       </Show>
-      <AuthModal showing={modalShowing()} />
+      <Show when={modalShowing()}>
+        <AuthModal showing={modalShowing()} />
+      </Show>
+
       <div id="tabs" ref={topBarRef!}>
-        <For each={tabs()}>
-          {(item, idx) => (
-            <Tab
-              index={idx()}
-              isActive={idx() === currTabIdx()}
-              isChannelLive={false}
-              channel={item}
-            ></Tab>
-          )}
-        </For>
+        <TabLayoutDraggable />
       </div>
+
       <For each={tabs()}>
         {(item, idx) => (
           <Chatroom channel={item} isActive={idx() === currTabIdx()}></Chatroom>

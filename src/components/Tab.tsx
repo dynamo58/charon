@@ -1,20 +1,20 @@
-import { JSXElement } from "solid-js";
 import { css } from "solid-styled";
 import { useGlobalContext } from "../store";
 import { Tab as TabData } from "../types";
 
 interface ITabProps {
-  children?: JSXElement;
   isChannelLive: boolean;
   isActive: boolean;
   index: number;
   channel: TabData;
+  sortable: any;
 }
 
 const Tab = (props: ITabProps) => {
+  // @ts-ignore
+  const { sortable } = props;
   const { theme } = useGlobalContext();
   const { setCurrTabIdx, closeTab } = useGlobalContext();
-  const index = props.index;
 
   css`
     .tab {
@@ -45,24 +45,24 @@ const Tab = (props: ITabProps) => {
   `;
 
   return (
-    <>
-      <div
-        class="tab"
+    <div
+      // @ts-ignore
+      use:sortable
+      class="tab"
+      onclick={() => {
+        setCurrTabIdx(props.index);
+      }}
+    >
+      {props.channel.label}
+      <span
+        class="close-btn"
         onclick={() => {
-          setCurrTabIdx(index);
+          closeTab(props.index);
         }}
       >
-        {props.channel.label}
-        <span
-          class="close-btn"
-          onclick={() => {
-            closeTab(index);
-          }}
-        >
-          ×
-        </span>
-      </div>
-    </>
+        ×
+      </span>
+    </div>
   );
 };
 

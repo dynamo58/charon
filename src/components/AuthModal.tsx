@@ -1,4 +1,4 @@
-import { JSX, createEffect } from "solid-js";
+import { createEffect } from "solid-js";
 import { css } from "solid-styled";
 import { useGlobalContext } from "../store";
 import { TWITCH_AUTH_URL } from "../constants";

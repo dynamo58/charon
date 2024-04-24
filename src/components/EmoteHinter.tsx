@@ -1,5 +1,5 @@
 import { css } from "solid-styled";
-import { For, createEffect, createSignal } from "solid-js";
+import { For, createSignal } from "solid-js";
 import { Emote } from "../types";
 import { useGlobalContext } from "../store";
 import { Keybind, useKeybindManager } from "../KeybindManager";

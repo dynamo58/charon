@@ -11,6 +11,7 @@ const Usernotice = (props: IUsernoticePayload) => {
     div.usernotice {
       width: 100%;
       background-color: #9514cc33;
+      padding: ${`${0.3 * theme().fonts.scale}em 0`};
       & > * {
         display: inline-block;
         vertical-align: middle;

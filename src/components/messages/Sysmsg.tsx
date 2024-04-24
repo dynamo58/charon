@@ -13,7 +13,7 @@ const Sysmsg = (props: ISysmsgPayload) => {
       width: 100%;
       color: #ddd;
       vertical-align: baseline;
-      margin: ${`${0.3 * theme().fonts.scale}em 0`};
+      padding: ${`${0.3 * theme().fonts.scale}em 0`};
     }
   `;
 

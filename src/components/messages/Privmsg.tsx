@@ -17,7 +17,7 @@ const Privmsg = (props: IPrivmgPayload) => {
       width: 100%;
       background-color: ${props.is_first_message ? "#00ff0033" : "initial"};
       vertical-align: baseline;
-      margin: ${`${0.3 * theme().fonts.scale}em 0`};
+      padding: ${`${0.3 * theme().fonts.scale}em 0`};
       /*align-content: center;*/
     }
 

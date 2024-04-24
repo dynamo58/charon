@@ -92,16 +92,16 @@ const MessageInput = () => {
     )
   );
 
-  // fallback to random chars activating the message input
-  registerKeybind(
-    new Keybind(
-      "focus chat on random keypresses",
-      (e) => /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey,
-      (_) => {
-        messageInputRef.focus();
-      }
-    )
-  );
+  // // fallback to random chars activating the message input
+  // registerKeybind(
+  //   new Keybind(
+  //     "focus chat on random keypresses",
+  //     (e) => /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.shiftKey && !e.altKey,
+  //     (_) => {
+  //       messageInputRef.focus();
+  //     }
+  //   )
+  // );
 
   window.addEventListener("emoteChosen", ((evt: CustomEvent<string>) => {
     const emoteCode = evt.detail;
