@@ -1,6 +1,6 @@
 use crate::data::Dataset;
-use crate::handle_received_message;
 use crate::payload::SystemMessage;
+use crate::shared::handle_received_message;
 use crate::shared::Levenshtein;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -18,7 +18,7 @@ use std::net::TcpListener;
 use std::net::TcpStream;
 
 use crate::config::Config;
-use crate::Connections;
+use crate::shared::Connections;
 
 use crate::apis::recent_messages;
 

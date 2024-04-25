@@ -329,11 +329,11 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "directories",
- "dotenv",
  "fontdb",
  "reqwest",
  "serde",
  "serde_json",
+ "stupid_simple_dotenv",
  "tauri",
  "tauri-build",
  "tauri-plugin-window-state",
@@ -675,12 +675,6 @@ dependencies = [
  "quote",
  "syn 2.0.57",
 ]
-
-[[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dtoa"
@@ -2993,6 +2987,12 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "stupid_simple_dotenv"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d640e91a1fe528403fd40bf74af1891951e9a59e318c076a65ad5f5b3d23de9b"
 
 [[package]]
 name = "syn"

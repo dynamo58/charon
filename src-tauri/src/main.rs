@@ -5,12 +5,6 @@ use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex as TMutex;
 
-use tracing_subscriber;
-
-extern crate dotenv;
-use dotenv::dotenv;
-use std::env;
-
 mod apis;
 mod badge;
 mod color;
@@ -22,16 +16,12 @@ mod emote;
 mod payload;
 mod shared;
 
-use data::Dataset;
-use shared::handle_received_message;
-use shared::Connections;
-
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    dotenv().ok();
+    stupid_simple_dotenv::to_env().ok();
 
-    let (mut incoming_messages, connections) = Connections::default();
+    let (mut incoming_messages, connections) = shared::Connections::default();
     let config = config::Config::from_config_file().unwrap();
 
     for tab in &config.tabs {
@@ -40,7 +30,7 @@ async fn main() {
 
     let app = tauri::Builder::default();
 
-    let data = Arc::new(TMutex::new(Dataset::default()));
+    let data = Arc::new(TMutex::new(data::Dataset::default()));
     let data2 = data.clone();
 
     app.setup(move |app| {
@@ -53,7 +43,11 @@ async fn main() {
                     // println!("Received some message");
                     // println!("Received message: {:#?}", message);
 
-                    handle_received_message(&app_handle, message, &data3.lock().await.to_owned());
+                    shared::handle_received_message(
+                        &app_handle,
+                        message,
+                        &data3.lock().await.to_owned(),
+                    );
                 }
             }
         });
