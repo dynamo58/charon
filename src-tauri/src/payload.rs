@@ -125,7 +125,7 @@ fn inject_message(s: String, privmsg: &PrivmsgMessage, data: &Dataset) -> String
             .enumerate()
             .find(|(_, &ref e)| e.code == word)
         {
-            out.push_str(&format!("<img class='emote' src='{}' />", em.url_3x));
+            out.push_str(&em.serialize_html());
             continue;
         }
 

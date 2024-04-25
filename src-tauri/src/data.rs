@@ -12,7 +12,8 @@ use crate::{
     },
     badge::{BadgeInfo, NativeBadgeSet},
     config::Config,
-    emote::Emote,
+    emoji::EMOJIS,
+    emote::{Emote, Provider},
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -145,6 +146,18 @@ impl Dataset {
             .filter(|e| e.code.contains(s))
             .cloned()
             .collect::<Vec<Emote>>();
+
+        for e in EMOJIS
+            .iter()
+            .filter(|e| e.ident.contains(s))
+            .map(|e| Emote {
+                code: e.emoji.to_string(),
+                provider: Provider::Native,
+                url_3x: "".to_string(),
+            })
+        {
+            emotes.push(e.clone());
+        }
 
         emotes.sort();
         Some(emotes)

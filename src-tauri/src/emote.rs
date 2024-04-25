@@ -14,6 +14,8 @@ pub enum Provider {
     BTTV,
     /// emote comes from FFZ
     FFZ,
+    /// emojis
+    Emoji,
 }
 
 #[derive(Debug, Clone, Serialize, Eq, PartialEq, Ord, Deserialize)]
@@ -25,6 +27,15 @@ pub struct Emote {
     /// for native, bttv and ffz this would be 112x112
     /// and for 7tv 128x128, cuz they just have to be special
     pub url_3x: String,
+}
+
+impl Emote {
+    pub fn serialize_html(&self) -> String {
+        match &self.provider {
+            Provider::Emoji => self.code.clone(),
+            _ => format!("<img class='emote' src='{}' />", self.url_3x),
+        }
+    }
 }
 
 impl PartialOrd for Emote {
