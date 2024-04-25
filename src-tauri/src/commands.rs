@@ -305,6 +305,9 @@ pub async fn authentificate(
     let config = config.inner().lock().await;
 
     if let Some(a) = &conns.authed {
+        app_handle
+            .emit_all("conn_info", a.helix_user_token.login.to_string())
+            .unwrap();
         (*data) = Dataset::from_config(&config, &a.helix_user_token, &a.helix, &app_handle)
             .await
             .unwrap();

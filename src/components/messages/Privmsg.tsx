@@ -5,11 +5,21 @@ import { For, onMount } from "solid-js";
 import { useGlobalContext } from "../../store";
 
 const Privmsg = (props: IPrivmgPayload) => {
-  const { theme } = useGlobalContext();
+  // TODO: add an option whether or not to stack these
+  const NotificationSound = new Audio("/sounds/notification.mp3");
+  NotificationSound.volume = 0.5;
+  const { theme, connInfo } = useGlobalContext();
   let messageRef: HTMLDivElement;
 
   onMount(() => {
     messageRef.innerHTML = props.message;
+
+    if (
+      connInfo() &&
+      props.sender_nick.toLowerCase() !== connInfo() &&
+      props.message.toLowerCase().includes(connInfo()!)
+    )
+      NotificationSound.play();
   });
 
   css`
@@ -18,7 +28,6 @@ const Privmsg = (props: IPrivmgPayload) => {
       background-color: ${props.is_first_message ? "#00ff0033" : "initial"};
       vertical-align: baseline;
       padding: ${`${0.3 * theme().fonts.scale}em 0`};
-      /*align-content: center;*/
     }
 
     div.privmsg > * {

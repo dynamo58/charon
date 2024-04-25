@@ -21,6 +21,7 @@ interface ContextProps {
   setCurrTabIdx: Setter<number>;
   theme: Accessor<Theme>;
   setTheme: Setter<Theme>;
+  connInfo: Accessor<string | null>;
 }
 
 const GlobalContext = createContext<ContextProps>();
@@ -64,6 +65,13 @@ export function GlobalContextProvider(props: any) {
     backdrop: {
       property: "none",
     },
+  });
+
+  const [connInfo, setConnInfo] = createSignal<string | null>(null);
+
+  listen("conn_info", (e) => {
+    const data = e.payload as string;
+    setConnInfo(data);
   });
 
   // ==========================================================================
@@ -191,6 +199,7 @@ export function GlobalContextProvider(props: any) {
         setCurrTabIdx,
         theme,
         setTheme,
+        connInfo,
       }}
     >
       {props.children}

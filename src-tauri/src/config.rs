@@ -58,7 +58,7 @@ impl Default for Config {
 impl Config {
     // makes sure that the config dir is properly structured
     fn scaffold_dir() -> anyhow::Result<std::path::PathBuf> {
-        let proj_dirs = ProjectDirs::from("org", "gh_dynamo58", "conduit")
+        let proj_dirs = ProjectDirs::from("org", "gh_dynamo58", "charon")
             .context("Error: couldn't get home directory")?;
 
         let config_dir = proj_dirs.config_dir();
